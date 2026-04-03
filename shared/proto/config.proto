@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package config.v1;
+
+option go_package = "github.com/yourorg/golang-modules/shared/proto/config/v1;configv1";
+
+// ConfigService provides per-tenant feature flags and configuration values.
+service ConfigService {
+  rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+  rpc SetConfig(SetConfigRequest) returns (SetConfigResponse);
+}
+
+message GetConfigRequest {
+  string tenant_id = 1;
+  string key       = 2;
+}
+
+message GetConfigResponse {
+  string key       = 1;
+  string value     = 2;
+  bool   found     = 3;
+}
+
+message SetConfigRequest {
+  string tenant_id = 1;
+  string key       = 2;
+  string value     = 3;
+}
+
+message SetConfigResponse {
+  bool success = 1;
+}

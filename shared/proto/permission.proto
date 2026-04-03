@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package permission.v1;
+
+option go_package = "github.com/yourorg/golang-modules/shared/proto/permission/v1;permissionv1";
+
+// PermissionService evaluates resource-based access control policies.
+service PermissionService {
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse);
+}
+
+message CheckPermissionRequest {
+  string tenant_id     = 1;
+  string user_id       = 2;
+  string resource_type = 3;
+  string resource_id   = 4;
+  string action        = 5;
+}
+
+message CheckPermissionResponse {
+  bool   allowed = 1;
+  string reason  = 2;
+}
+
+message ListPermissionsRequest {
+  string tenant_id = 1;
+  string user_id   = 2;
+}
+
+message PermissionEntry {
+  string id            = 1;
+  string user_id       = 2;
+  string resource_type = 3;
+  string resource_id   = 4;
+  string action        = 5;
+}
+
+message ListPermissionsResponse {
+  repeated PermissionEntry permissions = 1;
+}

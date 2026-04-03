@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package audit.v1;
+
+option go_package = "github.com/yourorg/golang-modules/shared/proto/audit/v1;auditv1";
+
+// AuditService exposes audit log reads for internal gRPC calls.
+service AuditService {
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse);
+}
+
+message ListEventsRequest {
+  string tenant_id = 1;
+  string actor_id  = 2;
+  string action    = 3;
+  int32  limit     = 4;
+  string cursor    = 5;
+}
+
+message AuditEntry {
+  string  id            = 1;
+  string  tenant_id     = 2;
+  string  actor_id      = 3;
+  string  actor_type    = 4;
+  string  action        = 5;
+  string  resource_id   = 6;
+  string  resource_type = 7;
+  string  ip_address    = 8;
+  string  occurred_at   = 9;
+}
+
+message ListEventsResponse {
+  repeated AuditEntry entries     = 1;
+  string              next_cursor = 2;
+}
