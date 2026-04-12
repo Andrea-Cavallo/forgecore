@@ -18,6 +18,7 @@ type RecordEventInput struct {
 	ResourceType string
 	IPAddress    string
 	Metadata     map[string]any
+	OccurredAt   time.Time
 }
 
 func (i RecordEventInput) Validate() error {
@@ -52,7 +53,12 @@ func (uc *RecordEventUseCase) Execute(ctx context.Context, input RecordEventInpu
 		ResourceType: input.ResourceType,
 		IPAddress:    input.IPAddress,
 		Metadata:     input.Metadata,
-		OccurredAt:   time.Now().UTC(),
+		OccurredAt:   func() time.Time {
+			if !input.OccurredAt.IsZero() {
+				return input.OccurredAt
+			}
+			return time.Now().UTC()
+		}(),
 	}
 	if err := uc.repo.Append(ctx, entry); err != nil {
 		return fmt.Errorf("registrazione evento audit fallita: %w", err)

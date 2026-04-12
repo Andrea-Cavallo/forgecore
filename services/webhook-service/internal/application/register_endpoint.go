@@ -3,6 +3,8 @@ package application
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,8 +22,38 @@ func (i RegisterEndpointInput) Validate() error {
 	if i.URL == "" {
 		return fmt.Errorf("URL obbligatorio")
 	}
+	if err := validateWebhookURL(i.URL); err != nil {
+		return err
+	}
 	if len(i.Events) == 0 {
 		return fmt.Errorf("almeno un evento richiesto")
+	}
+	return nil
+}
+
+// validateWebhookURL rejects non-HTTPS schemes and private/loopback IP targets (SSRF prevention).
+func validateWebhookURL(raw string) error {
+	u, err := url.ParseRequestURI(raw)
+	if err != nil {
+		return fmt.Errorf("URL non valido: %w", err)
+	}
+	if u.Scheme != "https" {
+		return fmt.Errorf("sono ammessi solo URL HTTPS")
+	}
+	host := u.Hostname()
+	ips, err := net.LookupHost(host)
+	if err != nil {
+		// Allow resolution failures at registration time; block on known bad hosts.
+		return nil
+	}
+	for _, ipStr := range ips {
+		ip := net.ParseIP(ipStr)
+		if ip == nil {
+			continue
+		}
+		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+			return fmt.Errorf("URL punta a indirizzo IP privato o loopback non consentito")
+		}
 	}
 	return nil
 }

@@ -3,18 +3,34 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 )
 
 // PIIEncryptor encrypts and decrypts personally identifiable information using AES-256-GCM.
-type PIIEncryptor struct{ key []byte }
+// It also provides HMAC-SHA256 deterministic hashing for DB index lookups.
+type PIIEncryptor struct {
+	key    []byte
+	pepper []byte
+}
 
-// NewPIIEncryptor creates a new encryptor with a 32-byte AES-256 key.
-func NewPIIEncryptor(key []byte) *PIIEncryptor { return &PIIEncryptor{key: key} }
+// NewPIIEncryptor creates a new encryptor with a 32-byte AES-256 key and a pepper for HMAC hashing.
+func NewPIIEncryptor(key, pepper []byte) *PIIEncryptor {
+	return &PIIEncryptor{key: key, pepper: pepper}
+}
+
+// Hash returns a deterministic HMAC-SHA256 hex hash using the encryptor pepper.
+// Use this for DB indexes on encrypted PII fields (e.g., email lookup).
+func (e *PIIEncryptor) Hash(value string) string {
+	mac := hmac.New(sha256.New, e.pepper)
+	mac.Write([]byte(value))
+	return hex.EncodeToString(mac.Sum(nil))
+}
 
 // Encrypt encrypts plaintext and returns a base64-encoded ciphertext.
 func (e *PIIEncryptor) Encrypt(plaintext string) (string, error) {
@@ -60,8 +76,3 @@ func (e *PIIEncryptor) Decrypt(encoded string) (string, error) {
 	return string(plain), nil
 }
 
-// Hash returns a deterministic SHA-256 hex hash — for DB indexes on encrypted fields.
-func Hash(value string) string {
-	h := sha256.Sum256([]byte(value))
-	return fmt.Sprintf("%x", h)
-}

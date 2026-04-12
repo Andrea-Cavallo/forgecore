@@ -12,6 +12,9 @@ const (
 	KeyPasswordMinLen        = "password.min_length"
 	KeySessionTTLHours       = "session.ttl_hours"
 	KeyAllowedOAuthProviders = "oauth.providers"
+
+	// CacheTTLSeconds is the default TTL for config values cached in Redis.
+	CacheTTLSeconds = 300
 )
 
 type TenantConfig struct {

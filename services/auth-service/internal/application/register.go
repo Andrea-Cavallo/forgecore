@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -38,11 +39,14 @@ type RegisterOutput struct {
 
 type RegisterUseCase struct {
 	users     domain.UserRepository
-	publisher *events.Publisher
+	publisher EventPublisher
 	encryptor *crypto.PIIEncryptor
 }
 
-func NewRegisterUseCase(users domain.UserRepository, pub *events.Publisher, enc *crypto.PIIEncryptor) *RegisterUseCase {
+func NewRegisterUseCase(users domain.UserRepository, pub EventPublisher, enc *crypto.PIIEncryptor) *RegisterUseCase {
+	if pub == nil {
+		pub = noopPublisher{}
+	}
 	return &RegisterUseCase{users: users, publisher: pub, encryptor: enc}
 }
 
@@ -50,8 +54,11 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, input RegisterInput) (*R
 	if err := input.Validate(); err != nil {
 		return nil, fmt.Errorf("input non valido: %w", err)
 	}
-	emailHash := crypto.Hash(input.Email)
-	existing, _ := uc.users.GetByEmailHash(ctx, emailHash, input.TenantID)
+	emailHash := uc.encryptor.Hash(input.Email)
+	existing, err := uc.users.GetByEmailHash(ctx, emailHash, input.TenantID)
+	if err != nil && !errors.Is(err, domain.ErrUserNotFound) {
+		return nil, fmt.Errorf("verifica email esistente fallita: %w", err)
+	}
 	if existing != nil {
 		return nil, domain.ErrEmailAlreadyExists
 	}

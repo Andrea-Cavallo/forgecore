@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -45,7 +46,10 @@ func (uc *SubscribeUseCase) Execute(ctx context.Context, input SubscribeInput) (
 	if err != nil {
 		return nil, fmt.Errorf("piano non trovato: %w", err)
 	}
-	existing, _ := uc.subs.GetActiveByUser(ctx, input.UserID, input.TenantID)
+	existing, err := uc.subs.GetActiveByUser(ctx, input.UserID, input.TenantID)
+	if err != nil && !errors.Is(err, domain.ErrSubscriptionNotFound) {
+		return nil, fmt.Errorf("verifica abbonamento esistente fallita: %w", err)
+	}
 	if existing != nil {
 		return nil, domain.ErrAlreadySubscribed
 	}

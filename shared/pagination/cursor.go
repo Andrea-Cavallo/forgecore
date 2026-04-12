@@ -25,9 +25,12 @@ type Page struct {
 }
 
 // Encode serializes a Cursor to a URL-safe base64 string.
-func Encode(c Cursor) string {
-	b, _ := json.Marshal(c)
-	return base64.URLEncoding.EncodeToString(b)
+func Encode(c Cursor) (string, error) {
+	b, err := json.Marshal(c)
+	if err != nil {
+		return "", fmt.Errorf("cursor encode: %w", err)
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
 }
 
 // Decode deserializes a cursor string back to a Cursor.

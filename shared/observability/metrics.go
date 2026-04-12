@@ -1,6 +1,7 @@
 package observability
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,21 +17,33 @@ type HTTPMetrics struct {
 }
 
 // NewHTTPMetrics creates and registers Prometheus metrics for the given service.
-func NewHTTPMetrics(service string) *HTTPMetrics {
-	m := &HTTPMetrics{
-		RequestsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
-			Namespace: "app",
-			Subsystem: service,
-			Name:      "http_requests_total",
-		}, []string{"method", "path", "status"}),
-		RequestDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
-			Namespace: service,
-			Name:      "http_request_duration_seconds",
-			Buckets:   prometheus.DefBuckets,
-		}, []string{"method", "path"}),
+// Safe to call multiple times (e.g., in tests): returns the previously registered collector on conflict.
+func NewHTTPMetrics(service string) (*HTTPMetrics, error) {
+	reqTotal := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "app",
+		Subsystem: service,
+		Name:      "http_requests_total",
+	}, []string{"method", "path", "status"})
+	reqDur := prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: service,
+		Name:      "http_request_duration_seconds",
+		Buckets:   prometheus.DefBuckets,
+	}, []string{"method", "path"})
+	reqTotal = mustRegisterOrExisting(reqTotal).(*prometheus.CounterVec)
+	reqDur = mustRegisterOrExisting(reqDur).(*prometheus.HistogramVec)
+	return &HTTPMetrics{RequestsTotal: reqTotal, RequestDuration: reqDur}, nil
+}
+
+// mustRegisterOrExisting registers c; if already registered returns the existing collector.
+func mustRegisterOrExisting(c prometheus.Collector) prometheus.Collector {
+	if err := prometheus.Register(c); err != nil {
+		var are prometheus.AlreadyRegisteredError
+		if errors.As(err, &are) {
+			return are.ExistingCollector
+		}
+		panic(err)
 	}
-	prometheus.MustRegister(m.RequestsTotal, m.RequestDuration)
-	return m
+	return c
 }
 
 // MetricsMiddleware wraps an http.Handler to record request metrics.

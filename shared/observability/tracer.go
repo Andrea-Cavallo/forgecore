@@ -11,11 +11,13 @@ import (
 )
 
 // InitTracer initializes an OTLP HTTP trace exporter and registers it globally.
-func InitTracer(ctx context.Context, service, version, otelEndpoint string) (*sdktrace.TracerProvider, error) {
-	exp, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpoint(otelEndpoint),
-		otlptracehttp.WithInsecure(),
-	)
+// Set insecure=true only for local/dev environments; production must use TLS.
+func InitTracer(ctx context.Context, service, version, otelEndpoint string, insecure bool) (*sdktrace.TracerProvider, error) {
+	opts := []otlptracehttp.Option{otlptracehttp.WithEndpoint(otelEndpoint)}
+	if insecure {
+		opts = append(opts, otlptracehttp.WithInsecure())
+	}
+	exp, err := otlptracehttp.New(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}

@@ -1,11 +1,11 @@
 FROM golang:1.24-alpine AS builder
-WORKDIR /app
-COPY go.mod ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o server ./cmd/server
+WORKDIR /workspace
+COPY shared/ shared/
+COPY services/config-service/ services/config-service/
+WORKDIR /workspace/services/config-service
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -o /server ./cmd/server
 
 FROM gcr.io/distroless/static-debian12
-COPY --from=builder /app/server /server
+COPY --from=builder /server /server
 EXPOSE 8088 9098
 ENTRYPOINT ["/server"]

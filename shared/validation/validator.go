@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -32,8 +33,12 @@ func Validate(input any) error {
 	if err == nil {
 		return nil
 	}
+	var ve validator.ValidationErrors
+	if !errors.As(err, &ve) {
+		return fmt.Errorf("errore di validazione interno: %w", err)
+	}
 	var fieldErrors FieldErrors
-	for _, e := range err.(validator.ValidationErrors) {
+	for _, e := range ve {
 		fieldErrors = append(fieldErrors, FieldError{
 			Field:   strings.ToLower(e.Field()),
 			Message: humanMessage(e),
@@ -45,16 +50,16 @@ func Validate(input any) error {
 func humanMessage(e validator.FieldError) string {
 	switch e.Tag() {
 	case "required":
-		return "is required"
+		return "è obbligatorio"
 	case "email":
-		return "must be a valid email address"
+		return "deve essere un indirizzo email valido"
 	case "min":
-		return fmt.Sprintf("must be at least %s", e.Param())
+		return fmt.Sprintf("deve essere almeno %s", e.Param())
 	case "max":
-		return fmt.Sprintf("must be at most %s", e.Param())
+		return fmt.Sprintf("deve essere al massimo %s", e.Param())
 	case "oneof":
-		return fmt.Sprintf("must be one of: %s", e.Param())
+		return fmt.Sprintf("deve essere uno tra: %s", e.Param())
 	default:
-		return fmt.Sprintf("failed validation: %s", e.Tag())
+		return fmt.Sprintf("validazione fallita: %s", e.Tag())
 	}
 }

@@ -11,6 +11,7 @@ import (
 type PaymentRepository interface {
 	Create(ctx context.Context, p *Payment) error
 	GetByID(ctx context.Context, id, tenantID uuid.UUID) (*Payment, error)
+	GetByProviderID(ctx context.Context, provider, providerID string) (*Payment, error)
 	Update(ctx context.Context, p *Payment) error
 	ListByTenant(ctx context.Context, tenantID uuid.UUID, cursor pagination.Cursor) ([]*Payment, error)
 	ListByUser(ctx context.Context, userID, tenantID uuid.UUID, cursor pagination.Cursor) ([]*Payment, error)

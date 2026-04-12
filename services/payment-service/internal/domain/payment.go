@@ -11,6 +11,8 @@ const (
 	StatusSucceeded = "succeeded"
 	StatusFailed    = "failed"
 	StatusRefunded  = "refunded"
+
+	ProviderStripe = "stripe"
 )
 
 // Payment represents a financial transaction within a tenant.

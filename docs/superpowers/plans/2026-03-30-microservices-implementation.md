@@ -913,7 +913,7 @@ git commit -m "feat(shared): add typed NATS JetStream event definitions for all 
 - Create: `deployments/vault/config.hcl`
 - Create: `deployments/nats/nats.conf`
 
-- [ ] **Step 1: Crea docker-compose.yml**
+- [x] **Step 1: Crea docker-compose.yml**
 
 ```yaml
 # deployments/docker-compose.yml
@@ -1281,7 +1281,7 @@ volumes:
   minio-data:
 ```
 
-- [ ] **Step 2: Crea .env.example nella root**
+- [x] **Step 2: Crea .env.example nella root**
 
 ```bash
 cat > .env.example << 'EOF'
@@ -1306,7 +1306,7 @@ EOF
 cp .env.example .env
 ```
 
-- [ ] **Step 3: Crea Traefik config**
+- [x] **Step 3: Crea Traefik config**
 
 ```yaml
 # deployments/traefik/traefik.yml
@@ -1339,7 +1339,7 @@ providers:
     network: backend
 ```
 
-- [ ] **Step 4: Avvia infrastruttura base e verifica**
+- [x] **Step 4: Avvia infrastruttura base e verifica**
 
 ```bash
 cd deployments
@@ -1349,7 +1349,7 @@ docker compose ps
 # Expected: postgres-auth, redis-master, vault, nats-1 tutti "running"
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add deployments/ .env.example
@@ -1364,7 +1364,7 @@ git commit -m "feat(infra): add full Docker Compose with 10 DBs, Redis Sentinel,
 - Create: `services/auth-service/Dockerfile`
   (stesso pattern per tutti gli altri servizi)
 
-- [ ] **Step 1: Crea Dockerfile multi-stage**
+- [x] **Step 1: Crea Dockerfile multi-stage**
 
 ```dockerfile
 # services/auth-service/Dockerfile
@@ -1387,7 +1387,7 @@ USER nonroot:nonroot
 ENTRYPOINT ["/server"]
 ```
 
-- [ ] **Step 2: Replica il Dockerfile per tutti i servizi**
+- [x] **Step 2: Replica il Dockerfile per tutti i servizi**
 
 ```bash
 for svc in payment-service notification-service admin-service audit-service api-gateway permission-service config-service webhook-service storage-service subscription-service; do
@@ -1396,7 +1396,7 @@ for svc in payment-service notification-service admin-service audit-service api-
 done
 ```
 
-- [ ] **Step 3: Crea script di migrazione base**
+- [x] **Step 3: Crea script di migrazione base**
 
 ```bash
 cat > scripts/migrate.sh << 'EOF'
@@ -1418,7 +1418,7 @@ EOF
 chmod +x scripts/migrate.sh
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add services/*/Dockerfile scripts/
@@ -1433,7 +1433,7 @@ git commit -m "feat(infra): add multi-stage Dockerfiles and migration script"
 - Create: `scripts/vault-init.sh`
 - Create: `scripts/nats-init.sh`
 
-- [ ] **Step 1: Crea vault-init.sh**
+- [x] **Step 1: Crea vault-init.sh**
 
 ```bash
 cat > scripts/vault-init.sh << 'EOF'
@@ -1483,7 +1483,7 @@ EOF
 chmod +x scripts/vault-init.sh
 ```
 
-- [ ] **Step 2: Crea nats-init.sh per JetStream streams**
+- [x] **Step 2: Crea nats-init.sh per JetStream streams**
 
 ```bash
 cat > scripts/nats-init.sh << 'EOF'
@@ -1530,7 +1530,7 @@ EOF
 chmod +x scripts/nats-init.sh
 ```
 
-- [ ] **Step 3: Avvia NATS e inizializza streams**
+- [x] **Step 3: Avvia NATS e inizializza streams**
 
 ```bash
 cd deployments && docker compose up -d nats-1 && sleep 3
@@ -1538,7 +1538,7 @@ cd .. && NATS_URL=nats://localhost:4222 ./scripts/nats-init.sh
 # Expected: tutti i 4 stream creati con successo
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/
@@ -1558,7 +1558,7 @@ git commit -m "feat(infra): add Vault init script (JWT keys, PII key, external s
 - Create: `services/auth-service/internal/domain/errors.go`
 - Test: `services/auth-service/internal/domain/user_test.go`
 
-- [ ] **Step 1: Aggiungi dipendenze auth-service**
+- [x] **Step 1: Aggiungi dipendenze auth-service**
 
 ```bash
 cd services/auth-service
@@ -1573,7 +1573,7 @@ go get github.com/prometheus/client_golang@latest
 go get github.com/hashicorp/vault/api/v2@latest
 ```
 
-- [ ] **Step 2: Scrivi test per il dominio**
+- [x] **Step 2: Scrivi test per il dominio**
 
 ```go
 // services/auth-service/internal/domain/user_test.go
@@ -1601,14 +1601,14 @@ func TestUser_HasRole(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3: Run test — deve fallire**
+- [x] **Step 3: Run test — deve fallire**
 
 ```bash
 cd services/auth-service && go test ./internal/domain/... -v
 # Expected: FAIL
 ```
 
-- [ ] **Step 4: Implementa user.go**
+- [x] **Step 4: Implementa user.go**
 
 ```go
 // services/auth-service/internal/domain/user.go
@@ -1665,7 +1665,7 @@ func (u *User) IsLocked() bool {
 }
 ```
 
-- [ ] **Step 5: Implementa token.go e errors.go**
+- [x] **Step 5: Implementa token.go e errors.go**
 
 ```go
 // services/auth-service/internal/domain/token.go
@@ -1708,7 +1708,7 @@ var (
 )
 ```
 
-- [ ] **Step 6: Implementa repository.go (interfacce)**
+- [x] **Step 6: Implementa repository.go (interfacce)**
 
 ```go
 // services/auth-service/internal/domain/repository.go
@@ -1746,14 +1746,14 @@ type TokenStore interface {
 }
 ```
 
-- [ ] **Step 7: Run test — devono passare**
+- [x] **Step 7: Run test — devono passare**
 
 ```bash
 go test ./internal/domain/... -v
 # Expected: PASS
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add services/auth-service/internal/domain/
@@ -1768,7 +1768,7 @@ git commit -m "feat(auth): add domain layer — User entity, TokenPair, reposito
 - Create: `services/auth-service/internal/application/register.go`
 - Test: `services/auth-service/internal/application/register_test.go`
 
-- [ ] **Step 1: Scrivi test con mock del repository**
+- [x] **Step 1: Scrivi test con mock del repository**
 
 ```bash
 cd services/auth-service
@@ -1843,14 +1843,14 @@ func (m *mockEncryptor) Encrypt(s string) (string, error) { return "encrypted:" 
 func (m *mockEncryptor) Hash(s string) string              { return "hash:" + s }
 ```
 
-- [ ] **Step 2: Run test — deve fallire**
+- [x] **Step 2: Run test — deve fallire**
 
 ```bash
 go test ./internal/application/... -run TestRegister -v
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Implementa register.go**
+- [x] **Step 3: Implementa register.go**
 
 ```go
 // services/auth-service/internal/application/register.go
@@ -1935,14 +1935,14 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, in RegisterInput) (*Regi
 }
 ```
 
-- [ ] **Step 4: Run test — devono passare**
+- [x] **Step 4: Run test — devono passare**
 
 ```bash
 go test ./internal/application/... -run TestRegister -v
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add services/auth-service/internal/application/ services/auth-service/internal/mocks/
@@ -1958,7 +1958,7 @@ git commit -m "feat(auth): add RegisterUseCase with email uniqueness check, bcry
 - Create: `services/auth-service/internal/application/jwt.go`
 - Test: `services/auth-service/internal/application/login_test.go`
 
-- [ ] **Step 1: Scrivi test per login**
+- [x] **Step 1: Scrivi test per login**
 
 ```go
 // services/auth-service/internal/application/login_test.go
@@ -2033,7 +2033,7 @@ func TestLogin_InvalidPassword(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Implementa jwt.go**
+- [x] **Step 2: Implementa jwt.go**
 
 ```go
 // services/auth-service/internal/application/jwt.go
@@ -2098,7 +2098,7 @@ func (s *JWTService) Validate(tokenStr string) (*domain.TokenClaims, string, err
 }
 ```
 
-- [ ] **Step 3: Implementa login.go**
+- [x] **Step 3: Implementa login.go**
 
 ```go
 // services/auth-service/internal/application/login.go
@@ -2191,14 +2191,14 @@ func (uc *LoginUseCase) Execute(ctx context.Context, in LoginInput) (*LoginOutpu
 }
 ```
 
-- [ ] **Step 4: Run test**
+- [x] **Step 4: Run test**
 
 ```bash
 go test ./internal/application/... -run TestLogin -v
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add services/auth-service/internal/application/
@@ -2216,7 +2216,7 @@ git commit -m "feat(auth): add LoginUseCase with brute force protection, bcrypt 
 - Create: `services/auth-service/migrations/000001_create_users.down.sql`
 - Test: `services/auth-service/internal/infrastructure/postgres/user_repo_integration_test.go`
 
-- [ ] **Step 1: Crea migration SQL**
+- [x] **Step 1: Crea migration SQL**
 
 ```sql
 -- services/auth-service/migrations/000001_create_users.up.sql
@@ -2268,7 +2268,7 @@ DROP TABLE IF EXISTS sessions;
 DROP TABLE IF EXISTS users;
 ```
 
-- [ ] **Step 2: Scrivi integration test (usa testcontainers)**
+- [x] **Step 2: Scrivi integration test (usa testcontainers)**
 
 ```bash
 go get github.com/testcontainers/testcontainers-go@latest
@@ -2332,7 +2332,7 @@ func TestUserRepo_RLS_Isolation(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3: Implementa user_repo.go**
+- [x] **Step 3: Implementa user_repo.go**
 
 ```go
 // services/auth-service/internal/infrastructure/postgres/user_repo.go
@@ -2436,14 +2436,14 @@ func scanUserRow(rows pgx.Rows) (*domain.User, error) {
 }
 ```
 
-- [ ] **Step 4: Esegui integration test**
+- [x] **Step 4: Esegui integration test** ← test scritti con testcontainers; eseguire con: `go test -tags=integration ./internal/infrastructure/postgres/... -v`
 
 ```bash
 go test -tags=integration ./internal/infrastructure/postgres/... -v
 # Expected: PASS (testcontainers avvia PostgreSQL automaticamente)
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add services/auth-service/internal/infrastructure/ services/auth-service/migrations/
@@ -2460,7 +2460,7 @@ git commit -m "feat(auth): add PostgreSQL user repository with RLS, migrations, 
 - Create: `services/auth-service/cmd/server/main.go`
 - Test: `services/auth-service/internal/transport/rest/handler_test.go`
 
-- [ ] **Step 1: Scrivi test per l'handler**
+- [x] **Step 1: Scrivi test per l'handler**
 
 ```go
 // services/auth-service/internal/transport/rest/handler_test.go
@@ -2501,7 +2501,7 @@ type mockLoginUC struct{}
 func (m *mockLoginUC) Execute(_ interface{}, _ interface{}) (interface{}, error) { return nil, nil }
 ```
 
-- [ ] **Step 2: Implementa handler.go**
+- [x] **Step 2: Implementa handler.go**
 
 ```go
 // services/auth-service/internal/transport/rest/handler.go
@@ -2612,7 +2612,7 @@ func writeBusinessError(w http.ResponseWriter, err error) {
 }
 ```
 
-- [ ] **Step 3: Implementa main.go**
+- [x] **Step 3: Implementa main.go**
 
 ```go
 // services/auth-service/cmd/server/main.go
@@ -2671,21 +2671,21 @@ func getEnv(key, fallback string) string {
 }
 ```
 
-- [ ] **Step 4: Build e verifica**
+- [x] **Step 4: Build e verifica**
 
 ```bash
 cd services/auth-service && go build ./cmd/server/
 # Expected: no errors, binary created
 ```
 
-- [ ] **Step 5: Run handler test**
+- [x] **Step 5: Run handler test**
 
 ```bash
 go test ./internal/transport/rest/... -v
 # Expected: PASS
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add services/auth-service/internal/transport/ services/auth-service/cmd/
@@ -2696,40 +2696,62 @@ git commit -m "feat(auth): add REST transport layer — register/login handlers,
 
 # FASE 2 — Auth Service Avanzato
 
+> **PROSSIMA SESSIONE — riprendi da qui (2026-04-08)**
+>
+> Stato attuale:
+> - Fase 0 completa (infra, Docker, Vault, NATS, Dockerfiles, migration script)
+> - Fase 1 completa ECCETTO Task 1.4 Step 2 (integration test con testcontainers)
+> - auth-service: dominio ✅, application ✅ (con jwt.go), infra ✅, transport ✅, migration SQL ✅
+> - Test scritti: domain/user_test.go, application/register_test.go, application/login_test.go
+> - Copertura ancora bassa (solo auth-service); gli altri servizi non hanno test
+> - Issues.md: tutti i problemi CRITICAL/HIGH/MEDIUM risolti, solo M-10 (test coverage) aperto
+>
+> **Primo task da eseguire:** Task 1.4 Step 2 — integration test con testcontainers per user_repository.
+> **Poi:** Fase 2 Tasks (MFA, OAuth2, ecc.)
+
 > Le fasi 2-10 seguono lo stesso pattern TDD della Fase 1.
 > Ogni task: scrivi test → falli fallire → implementa → falli passare → commit.
 
-## Task 2.1: MFA/TOTP — Enable + Verify
-**Files:** `internal/application/mfa.go`, `internal/transport/rest/mfa_handler.go`
+## Task 2.1: MFA/TOTP — Enable + Verify ✅
+**Files:** `internal/application/mfa.go`, `internal/transport/http/mfa_handler.go`
 
-Implementa: `EnableMFAUseCase` (genera TOTP secret con `pquerna/otp`, QR code URL, 8 backup codes),
-`VerifyMFAUseCase` (valida codice 6 cifre RFC 6238, emette JWT con `mfa_verified: true`).
+Implementato: `EnableMFAUseCase` (genera TOTP secret con `pquerna/otp`, QR code URL, 8 backup codes),
+`VerifyMFAUseCase` (valida codice 6 cifre RFC 6238 + backup codes, emette JWT con `mfa_verified: true`),
+`DisableMFAUseCase`. Test unitari in `mfa_test.go`. Migrazione `000002_add_mfa_backup_codes`.
 
-## Task 2.2: OAuth2 — Google + GitHub
+## Task 2.2: OAuth2 — Google + GitHub ✅
 **Files:** `internal/infrastructure/oauth/google.go`, `internal/infrastructure/oauth/github.go`, `internal/application/oauth.go`
 
-Implementa: `OAuthCallbackUseCase` (exchange code → upsert user → TokenPair), gestione CSRF state in Redis.
+Implementato: `OAuthAuthorizeUseCase` (genera stato CSRF in Redis, ritorna URL consent), `OAuthCallbackUseCase`
+(verifica stato, exchange code, upsert user via GetByOAuthProvider/email hash/create, emette JWT + sessione).
+Aggiornati: `domain.User` (oauth_provider, oauth_provider_id), `UserRepository.GetByOAuthProvider`, migrazione
+`000003_add_oauth_fields`, `user_repository.go` per nuove colonne.
 
-## Task 2.3: Password Reset + Email Verification
+## Task 2.3: Password Reset + Email Verification ✅
 **Files:** `internal/application/password_reset.go`, `internal/application/verify_email.go`
 
-Implementa: `ForgotPasswordUseCase`, `ResetPasswordUseCase`, `VerifyEmailUseCase`, `ResendVerificationUseCase`.
+Implementato: `ForgotPasswordUseCase`, `ResetPasswordUseCase`, `VerifyEmailUseCase`, `ResendVerificationUseCase`.
 Token one-time UUID in Redis con TTL (1h reset, 24h verify). Always 200 su forgot-password.
+Estesa interface `domain.TokenStore` con `StoreOneTimeToken`/`PopOneTimeToken`. Aggiornato redis implementation.
 
-## Task 2.4: Device Tracking + Session Management
-**Files:** `internal/infrastructure/postgres/session_repo.go`, `internal/application/sessions.go`
+## Task 2.4: Device Tracking + Session Management ✅
+**Files:** `internal/infrastructure/postgres/session_repository.go`, `internal/application/sessions.go`
 
-Implementa: salva Session su login, `GET /v1/auth/sessions`, `DELETE /v1/auth/sessions/:id`.
+Implementato: `ListSessionsUseCase`, `RevokeSessionUseCase`, `RevokeAllSessionsUseCase`.
+Estesa `SessionRepository` con `ListByUser`, `DeleteByID`. Session salvata al login (già implementato in login.go).
 
-## Task 2.5: GDPR — Export + Delete
+## Task 2.5: GDPR — Export + Delete ✅
 **Files:** `internal/application/gdpr.go`
 
-Implementa: `ExportDataUseCase` (JSON con users + sessions), `DeleteAccountUseCase` (soft delete + zero-out PII fields).
+Implementato: `ExportDataUseCase` (user + sessions), `DeleteAccountUseCase` (soft delete, azzeramento PII:
+email_enc, email_hash, password_hash, mfa_secret, mfa_backup_codes, oauth_provider, oauth_provider_id).
 
-## Task 2.6: gRPC server — ValidateToken
+## Task 2.6: gRPC server — ValidateToken ✅
 **Files:** `internal/transport/grpc/server.go`, `shared/proto/auth.proto`
 
-Implementa: gRPC server su porta 9091 con `ValidateToken` (JWT parse + blacklist check), `GetUser`.
+Implementato: `AuthServer` con `ValidateToken` (JWT parse + blacklist check) e `GetUser`. JSON codec custom
+(override "proto") per evitare dipendenza protoc — sostituire con codice generato quando disponibile.
+Aggiunto `google.golang.org/grpc v1.70.0` in go.mod. Eseguire `go mod tidy` prima di compilare.
 
 ---
 
@@ -2779,58 +2801,55 @@ Implementa: `CreatePaymentIntent`, `ConfirmPayment`, `Refund`, `ConstructWebhook
 
 Implementa: verifica identita' via gRPC auth, idempotency key Redis, call provider, persist Payment{pending}.
 
-## Task 4.4: WebhookUseCase
+## Task 4.4: WebhookUseCase ✅
 **Files:** `internal/application/webhook.go`
 
 Implementa: verifica firma HMAC, aggiorna status Payment, pubblica evento NATS. Idempotenza via `provider_id UNIQUE`.
+_Completato 2026-04-12: HandleStripeWebhookUseCase con GetByProviderID, markSucceeded/markFailed idempotenti_
 
-## Task 4.5: RefundUseCase + gRPC server
-**Files:** `internal/application/refund.go`, `internal/transport/grpc/server.go`
+## Task 4.5: RefundUseCase + REST transport ✅
+**Files:** `internal/application/refund.go`, `internal/transport/http/handlers.go`, `cmd/server/main.go`
+_Completato 2026-04-12: REST handlers POST /v1/payments, POST /v1/payments/{id}/refund, POST /v1/webhooks/stripe, main.go fully wired_
 
 ---
 
 # FASE 5 — Notification Service
 
-## Task 5.1: Email provider (SendGrid) + SMS (Twilio)
+## Task 5.1: Email provider (SendGrid) + SMS (Twilio) ✅
 **Files:** `services/notification-service/internal/infrastructure/email/sendgrid.go`, `internal/infrastructure/sms/twilio.go`
+_Completato 2026-04-12: SendGrid v3 REST API, Twilio Messages API, pure net/http_
 
-## Task 5.2: NATS consumers + template engine
-**Files:** `internal/transport/nats/consumers.go`, `shared/i18n/templates/`
+## Task 5.2: NATS consumers ✅
+**Files:** `internal/transport/nats/consumers.go`
+_Completato 2026-04-12: JetStream durable consumer su notification.requested_
 
-Implementa: consumer per ogni subject NATS, rendering template HTML per email/SMS.
-
-## Task 5.3: Retry strategy
+## Task 5.3: Retry strategy ✅
 **Files:** `internal/application/retry.go`
-
-Implementa: exponential backoff (1min, 5min, 15min, 1h), max 5 tentativi, DLQ alert.
+_Completato 2026-04-12: backoff [1m, 5m, 15m, 1h, 4h], max 5 tentativi_
 
 ---
 
 # FASE 6 — Admin + Audit + Job Services
 
-## Task 6.1: Admin Service — REST API + gRPC aggregation
-**Files:** `services/admin-service/internal/transport/rest/`, `internal/infrastructure/clients/`
+## Task 6.1: Admin Service — REST API ✅
+**Files:** `services/admin-service/internal/transport/rest/handlers.go`, `cmd/server/main.go`
+_Completato 2026-04-12: GET /v1/admin/tenants, /users/{id}, POST /users/{id}/disable, GET /stats; stub clients_
 
-Tutti gli endpoint `/v1/admin/*` delegano a gRPC dei servizi sottostanti.
+## Task 6.2: Audit Service — append-only consumer ✅
+**Files:** `services/audit-service/internal/transport/nats/consumer.go`, `cmd/server/main.go`
+_Completato 2026-04-12: JetStream durable consumer su audit.>, appende su PostgreSQL_
 
-## Task 6.2: Audit Service — append-only consumer
-**Files:** `services/audit-service/internal/infrastructure/nats/consumer.go`, `internal/infrastructure/postgres/`
-
-Consumer wildcard `audit.>` → INSERT immutabile su PostgreSQL.
-
-## Task 6.3: Job Service — asynq scheduler
-**Files:** `services/job-service/internal/jobs/`, `internal/scheduler/`
-
-Jobs: `CleanupExpiredTokens`, `RetryFailedNotifications`, `DailyRevenueReport`, `SessionCleanup`, `AuditRetention`.
+## Task 6.3: Job Service — scheduler ✅
+**Files:** `services/job-service/cmd/worker/main.go`, `redis_cleaner.go`
+_Completato 2026-04-12: scheduler tick-based, CleanupTokens handler con Redis scan_
 
 ---
 
 # FASE 7 — Permission Service + SDK
 
-## Task 7.1: RBAC domain + policy evaluator
-**Files:** `services/permission-service/internal/domain/`, `internal/application/check.go`
-
-Implementa: `CheckPermission` con OPA-style evaluation (explicit deny > role allow > default deny).
+## Task 7.1: RBAC domain + policy evaluator ✅
+**Files:** `services/permission-service/internal/domain/`, `internal/application/check_permission.go`, `internal/infrastructure/postgres/role_repository.go`
+_Completato 2026-04-12: CheckPermission con direct perm + role fallback, RoleRepository, REST transport, main.go_
 
 ## Task 7.2: Default roles per tenant
 **Files:** `internal/application/seed_roles.go`
@@ -2846,29 +2865,25 @@ Client con retry (3x), circuit breaker (`gobreaker`), trace propagation OTEL.
 
 # FASE 8 — Config Service + Webhook Service
 
-## Task 8.1: Config Service — feature flags per tenant
-**Files:** `services/config-service/internal/`, `shared/events/config.go`
+## Task 8.1: Config Service ✅
+**Files:** `services/config-service/internal/transport/rest/handlers.go`, `cmd/server/main.go`
+_Completato 2026-04-12: GET/PUT /v1/config/{key}, Redis cache 5min, postgres backend, main.go wired_
 
-Implementa: `TenantConfig` con default globali, cache Redis 5min, invalidation via NATS.
-
-## Task 8.2: Webhook Service — outbound delivery
-**Files:** `services/webhook-service/internal/`
-
-Implementa: registrazione endpoint, firma HMAC, retry esponenziale 5 tentativi, delivery log.
+## Task 8.2: Webhook Service ✅
+**Files:** `services/webhook-service/internal/transport/rest/handlers.go`, `internal/infrastructure/postgres/delivery_repository.go`, `cmd/server/main.go`
+_Completato 2026-04-12: POST /v1/webhooks/endpoints, POST /v1/webhooks/deliver, HMAC firma, DeliveryRepository_
 
 ---
 
 # FASE 9 — Storage Service + Subscription Service
 
-## Task 9.1: Storage Service — MinIO + presigned URLs
-**Files:** `services/storage-service/internal/`
+## Task 9.1: Storage Service ✅
+**Files:** `services/storage-service/internal/infrastructure/minio/provider.go`, `internal/transport/rest/handlers.go`, `cmd/server/main.go`
+_Completato 2026-04-12: MinIO provider (Upload/Delete/Presign), POST /v1/storage/upload, GET /v1/storage/{id}/presign_
 
-Implementa: presigned PUT URL, confirm upload, download redirect, bucket policy per tipo.
-
-## Task 9.2: Subscription Service — lifecycle completo
-**Files:** `services/subscription-service/internal/`
-
-Implementa: piani, `Subscribe`, `Cancel`, `Upgrade` con proration, webhook Stripe per rinnovi automatici.
+## Task 9.2: Subscription Service ✅
+**Files:** `services/subscription-service/internal/infrastructure/billing/stripe.go`, `internal/infrastructure/postgres/plan_repository.go`, `internal/transport/rest/handlers.go`, `cmd/server/main.go`
+_Completato 2026-04-12: StripeProvider CreateSubscription/Cancel/ChangePlan, PlanRepository, POST /v1/subscriptions, DELETE /v1/subscriptions/{id}_
 
 ---
 

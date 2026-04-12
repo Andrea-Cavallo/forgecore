@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -34,7 +33,7 @@ func TenantMiddleware(next http.Handler) http.Handler {
 		}
 		tenantID, err := uuid.Parse(raw)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("tenant_id non valido: %s", raw), http.StatusBadRequest)
+			http.Error(w, "tenant_id non valido", http.StatusBadRequest)
 			return
 		}
 		ctx := WithTenant(r.Context(), tenantID)

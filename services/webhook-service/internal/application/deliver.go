@@ -61,7 +61,9 @@ func (uc *DeliverUseCase) Execute(ctx context.Context, input DeliverInput) error
 		}
 		delivery.Attempts++
 		delivery.UpdatedAt = now
-		_ = uc.deliveries.Create(ctx, delivery)
+		if err := uc.deliveries.Create(ctx, delivery); err != nil {
+			return fmt.Errorf("salvataggio consegna webhook fallito: %w", err)
+		}
 	}
 	return nil
 }
@@ -88,6 +90,6 @@ func (uc *DeliverUseCase) deliver(ctx context.Context, ep *domain.WebhookEndpoin
 
 func computeHMAC(secret string, payload []byte) string {
 	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write(payload)
+	_, _ = mac.Write(payload) // hash.Hash.Write never returns a non-nil error per spec
 	return "sha256=" + hex.EncodeToString(mac.Sum(nil))
 }

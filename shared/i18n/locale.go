@@ -13,11 +13,20 @@ const (
 
 // FormatAmount formats an integer amount in minor units (e.g. cents) as a currency string.
 // amount is in the smallest currency unit (e.g. 1050 = 10.50).
+// Italian locale uses comma as decimal separator: "EUR 10,50".
 func FormatAmount(amount int64, currency, locale string) string {
 	major := float64(amount) / 100.0
 	switch locale {
 	case LocaleIT:
-		return fmt.Sprintf("%s %.2f", currency, major)
+		// Italian convention: comma decimal separator, e.g. "EUR 10,50"
+		s := fmt.Sprintf("%.2f", major)
+		for i, c := range s {
+			if c == '.' {
+				s = s[:i] + "," + s[i+1:]
+				break
+			}
+		}
+		return currency + " " + s
 	default:
 		return fmt.Sprintf("%s %.2f", currency, major)
 	}

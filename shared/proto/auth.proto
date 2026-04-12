@@ -15,10 +15,11 @@ message ValidateTokenRequest {
 }
 
 message ValidateTokenResponse {
-  string user_id   = 1;
-  string tenant_id = 2;
-  repeated string roles = 3;
-  bool   valid     = 4;
+  bool   valid        = 1;
+  string user_id      = 2;
+  string tenant_id    = 3;
+  repeated string roles = 4;
+  bool   mfa_verified = 5;
 }
 
 message GetUserRequest {
@@ -27,10 +28,10 @@ message GetUserRequest {
 }
 
 message GetUserResponse {
-  string user_id    = 1;
-  string tenant_id  = 2;
-  string email      = 3;
-  string first_name = 4;
-  string last_name  = 5;
-  bool   active     = 6;
+  string user_id        = 1;
+  string tenant_id      = 2;
+  bool   email_verified = 3;
+  bool   mfa_enabled    = 4;
+  repeated string roles = 5;
+  bool   is_deleted     = 6;
 }

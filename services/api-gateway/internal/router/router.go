@@ -22,7 +22,7 @@ func (r *Router) Register(prefix string, p *proxy.ServiceProxy) {
 func (r *Router) Health(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"ok"}`))
+	_, _ = w.Write([]byte(`{"status":"ok"}`)) // network errors after headers are sent are non-actionable
 }
 
 func (r *Router) Build() http.Handler {

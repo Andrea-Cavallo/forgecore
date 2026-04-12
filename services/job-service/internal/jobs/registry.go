@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 )
@@ -37,11 +36,3 @@ func (r *Registry) Dispatch(ctx context.Context, jobType string, payload []byte)
 	return nil
 }
 
-// MustMarshal marshals a payload or panics — for test setup only.
-func MustMarshal(v any) []byte {
-	b, err := json.Marshal(v)
-	if err != nil {
-		panic(err)
-	}
-	return b
-}

@@ -52,50 +52,58 @@ func (uc *CreatePaymentUseCase) Execute(ctx context.Context, input CreatePayment
 	if err := input.Validate(); err != nil {
 		return nil, fmt.Errorf("input non valido: %w", err)
 	}
-
-	now := time.Now().UTC()
-	payment := &domain.Payment{
-		ID:        uuid.New(),
-		TenantID:  input.TenantID,
-		UserID:    input.UserID,
-		Amount:    input.Amount,
-		Currency:  input.Currency,
-		Provider:  "stripe",
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
-
+	payment := uc.buildPayment(input)
 	providerID, chargeErr := uc.provider.Charge(ctx, input.Amount, input.Currency, input.CustomerID)
 	if chargeErr != nil {
-		payment.Status = domain.StatusFailed
-		payment.FailureReason = chargeErr.Error()
-		_ = uc.repo.Create(ctx, payment)
-		_ = uc.publisher.Publish(ctx, events.SubjectPaymentFailed, events.PaymentFailed{
-			TenantID:   input.TenantID,
-			UserID:     input.UserID,
-			PaymentID:  payment.ID,
-			Reason:     payment.FailureReason,
-			OccurredAt: time.Now().UTC(),
-		})
-		return nil, fmt.Errorf("addebito fallito: %w", chargeErr)
+		return nil, uc.handleChargeFailure(ctx, payment, chargeErr)
 	}
-
 	payment.Status = domain.StatusSucceeded
 	payment.ProviderID = providerID
-
 	if err := uc.repo.Create(ctx, payment); err != nil {
 		return nil, fmt.Errorf("salvataggio pagamento fallito: %w", err)
 	}
-
-	_ = uc.publisher.Publish(ctx, events.SubjectPaymentSucceeded, events.PaymentSucceeded{
-		TenantID:   input.TenantID,
-		UserID:     input.UserID,
+	if err := uc.publisher.Publish(ctx, events.SubjectPaymentSucceeded, events.PaymentSucceeded{
+		TenantID:   payment.TenantID,
+		UserID:     payment.UserID,
 		PaymentID:  payment.ID,
 		Amount:     payment.Amount,
 		Currency:   payment.Currency,
 		Provider:   payment.Provider,
 		OccurredAt: time.Now().UTC(),
-	})
-
+	}); err != nil {
+		return nil, fmt.Errorf("pubblicazione evento pagamento fallita: %w", err)
+	}
 	return &CreatePaymentOutput{Payment: payment}, nil
+}
+
+func (uc *CreatePaymentUseCase) buildPayment(input CreatePaymentInput) *domain.Payment {
+	now := time.Now().UTC()
+	return &domain.Payment{
+		ID:        uuid.New(),
+		TenantID:  input.TenantID,
+		UserID:    input.UserID,
+		Amount:    input.Amount,
+		Currency:  input.Currency,
+		Provider:  domain.ProviderStripe,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+}
+
+func (uc *CreatePaymentUseCase) handleChargeFailure(ctx context.Context, payment *domain.Payment, chargeErr error) error {
+	payment.Status = domain.StatusFailed
+	payment.FailureReason = chargeErr.Error()
+	if err := uc.repo.Create(ctx, payment); err != nil {
+		return fmt.Errorf("salvataggio fallimento pagamento: %w", err)
+	}
+	if err := uc.publisher.Publish(ctx, events.SubjectPaymentFailed, events.PaymentFailed{
+		TenantID:   payment.TenantID,
+		UserID:     payment.UserID,
+		PaymentID:  payment.ID,
+		Reason:     payment.FailureReason,
+		OccurredAt: time.Now().UTC(),
+	}); err != nil {
+		return fmt.Errorf("pubblicazione evento fallimento pagamento: %w", err)
+	}
+	return fmt.Errorf("addebito fallito: %w", chargeErr)
 }

@@ -26,8 +26,6 @@ type GetConfigOutput struct {
 	Found bool
 }
 
-const cacheTTLSeconds = 300
-
 type GetConfigUseCase struct {
 	repo  domain.ConfigRepository
 	cache domain.ConfigCache
@@ -52,6 +50,6 @@ func (uc *GetConfigUseCase) Execute(ctx context.Context, input GetConfigInput) (
 		}
 		return nil, fmt.Errorf("lettura configurazione fallita: %w", err)
 	}
-	_ = uc.cache.Set(ctx, input.TenantID, input.Key, cfg.Value, cacheTTLSeconds)
+	_ = uc.cache.Set(ctx, input.TenantID, input.Key, cfg.Value, domain.CacheTTLSeconds)
 	return &GetConfigOutput{Value: cfg.Value, Found: true}, nil
 }

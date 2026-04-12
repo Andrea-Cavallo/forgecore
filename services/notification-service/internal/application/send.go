@@ -9,8 +9,6 @@ import (
 	"github.com/yourorg/golang-modules/services/notification-service/internal/domain"
 )
 
-const maxRetryAttempts = 3
-
 type SendInput struct {
 	TenantID  uuid.UUID
 	UserID    uuid.UUID

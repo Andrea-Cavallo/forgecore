@@ -7,19 +7,22 @@ import (
 )
 
 type User struct {
-	ID            uuid.UUID
-	TenantID      uuid.UUID
-	EmailEnc      []byte
-	EmailHash     string
-	PasswordHash  string
-	Roles         []string
-	MFAEnabled    bool
-	MFASecret     []byte
-	EmailVerified bool
-	LockedUntil   *time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	DeletedAt     *time.Time
+	ID              uuid.UUID
+	TenantID        uuid.UUID
+	EmailEnc        []byte
+	EmailHash       string
+	PasswordHash    string
+	Roles           []string
+	MFAEnabled      bool
+	MFASecret       []byte
+	MFABackupCodes  []string
+	EmailVerified   bool
+	LockedUntil     *time.Time
+	OAuthProvider   string // "google" | "github" | ""
+	OAuthProviderID string // provider-specific stable user ID
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       *time.Time
 }
 
 func (u *User) IsLocked(now time.Time) bool {

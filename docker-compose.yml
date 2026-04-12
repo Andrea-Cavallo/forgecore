@@ -1,0 +1,265 @@
+version: "3.9"
+
+networks:
+  superpowers:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  vault_data:
+
+services:
+
+  # ── Infrastructure ────────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-superpowers}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-superpowers}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks: [superpowers]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-superpowers}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --appendonly no
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks: [superpowers]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js", "-c", "/etc/nats/nats.conf"]
+    volumes:
+      - ./deployments/nats/nats.conf:/etc/nats/nats.conf:ro
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    networks: [superpowers]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks: [superpowers]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vault:
+    image: hashicorp/vault:1.17
+    command: server -dev -dev-root-token-id=root
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_ADDR: http://0.0.0.0:8200
+    volumes:
+      - vault_data:/vault/data
+    ports:
+      - "8200:8200"
+    networks: [superpowers]
+    cap_add: [IPC_LOCK]
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    networks: [superpowers]
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    volumes:
+      - ./deployments/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks: [superpowers]
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./deployments/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    networks: [superpowers]
+    depends_on: [prometheus]
+
+  # ── Microservices ─────────────────────────────────────────────────────────────
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${AUTH_PORT:-8081}:8081"
+      - "${AUTH_GRPC_PORT:-9091}:9091"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${PAYMENT_PORT:-8082}:8082"
+      - "${PAYMENT_GRPC_PORT:-9092}:9092"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
+      nats: {condition: service_healthy}
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${NOTIFICATION_PORT:-8083}:8083"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
+      nats: {condition: service_healthy}
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: services/admin-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${ADMIN_PORT:-8084}:8084"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: services/audit-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${AUDIT_PORT:-8085}:8085"
+      - "${AUDIT_GRPC_PORT:-9095}:9095"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
+      nats: {condition: service_healthy}
+
+  job-service:
+    build:
+      context: .
+      dockerfile: services/job-service/Dockerfile
+    env_file: .env
+    networks: [superpowers]
+    depends_on:
+      redis: {condition: service_healthy}
+      nats: {condition: service_healthy}
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    env_file: .env
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    networks: [superpowers]
+    depends_on:
+      - auth-service
+
+  permission-service:
+    build:
+      context: .
+      dockerfile: services/permission-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${PERMISSION_PORT:-8087}:8087"
+      - "${PERMISSION_GRPC_PORT:-9097}:9097"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  config-service:
+    build:
+      context: .
+      dockerfile: services/config-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${CONFIG_PORT:-8088}:8088"
+      - "${CONFIG_GRPC_PORT:-9098}:9098"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  webhook-service:
+    build:
+      context: .
+      dockerfile: services/webhook-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${WEBHOOK_PORT:-8089}:8089"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
+      nats: {condition: service_healthy}
+
+  storage-service:
+    build:
+      context: .
+      dockerfile: services/storage-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${STORAGE_PORT:-8090}:8090"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
+      minio: {condition: service_healthy}
+
+  subscription-service:
+    build:
+      context: .
+      dockerfile: services/subscription-service/Dockerfile
+    env_file: .env
+    ports:
+      - "${SUBSCRIPTION_PORT:-8091}:8091"
+      - "${SUBSCRIPTION_GRPC_PORT:-9099}:9099"
+    networks: [superpowers]
+    depends_on:
+      postgres: {condition: service_healthy}
