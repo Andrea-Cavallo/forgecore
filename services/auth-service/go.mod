@@ -1,8 +1,9 @@
-module github.com/yourorg/golang-modules/services/auth-service
+module github.com/Andrea-Cavallo/golang-modules/services/auth-service
 
-go 1.24
+go 1.26
 
 require (
+	github.com/Andrea-Cavallo/golang-modules/shared v0.0.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.0
@@ -10,7 +11,6 @@ require (
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/testcontainers/testcontainers-go v0.35.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.35.0
-	github.com/yourorg/golang-modules/shared v0.0.0
 	golang.org/x/crypto v0.31.0
 	google.golang.org/grpc v1.70.0
 )
@@ -77,4 +77,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/yourorg/golang-modules/shared => ../../shared
+replace github.com/Andrea-Cavallo/golang-modules/shared => ../../shared

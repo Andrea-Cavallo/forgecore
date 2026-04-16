@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/admin-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/services/admin-service/internal/application"
 )
 
 const headerTenantID = "X-Tenant-ID"

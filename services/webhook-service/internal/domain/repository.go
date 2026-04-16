@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/shared/pagination"
+	"github.com/Andrea-Cavallo/golang-modules/shared/pagination"
 )
 
 type EndpointRepository interface {

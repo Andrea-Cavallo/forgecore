@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/domain"
-	"github.com/yourorg/golang-modules/shared/pagination"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/shared/pagination"
 )
 
 const userSelectCols = `id, tenant_id, email_enc, email_hash, password_hash, roles,

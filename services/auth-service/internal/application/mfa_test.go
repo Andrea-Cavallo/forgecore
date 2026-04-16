@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/application"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/domain"
-	"github.com/yourorg/golang-modules/shared/pagination"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/shared/pagination"
 )
 
 // mfaUserRepo is an in-memory stub that supports GetByID for MFA tests.
@@ -53,6 +53,9 @@ func (r *mfaUserRepo) Delete(_ context.Context, id, _ uuid.UUID) error {
 	return nil
 }
 
+func (r *mfaUserRepo) GetByOAuthProvider(_ context.Context, _, _ string, _ uuid.UUID) (*domain.User, error) {
+	return nil, domain.ErrUserNotFound
+}
 func (r *mfaUserRepo) ListByTenant(_ context.Context, _ uuid.UUID, _ pagination.Cursor) ([]*domain.User, error) {
 	return nil, nil
 }

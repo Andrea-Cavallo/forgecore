@@ -1,6 +1,6 @@
-module github.com/yourorg/golang-modules/shared
+module github.com/Andrea-Cavallo/golang-modules/shared
 
-go 1.24
+go 1.26
 
 require (
 	github.com/go-playground/validator/v10 v10.22.1

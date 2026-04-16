@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/domain"
-	"github.com/yourorg/golang-modules/shared/crypto"
-	"github.com/yourorg/golang-modules/shared/pagination"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/shared/crypto"
+	"github.com/Andrea-Cavallo/golang-modules/shared/pagination"
 )
 
 // --- stubs ---
@@ -43,6 +43,9 @@ func (r *stubUserRepo) GetByID(_ context.Context, _, _ uuid.UUID) (*domain.User,
 }
 func (r *stubUserRepo) Update(_ context.Context, _ *domain.User) error { return nil }
 func (r *stubUserRepo) Delete(_ context.Context, _, _ uuid.UUID) error  { return nil }
+func (r *stubUserRepo) GetByOAuthProvider(_ context.Context, _, _ string, _ uuid.UUID) (*domain.User, error) {
+	return nil, domain.ErrUserNotFound
+}
 func (r *stubUserRepo) ListByTenant(_ context.Context, _ uuid.UUID, _ pagination.Cursor) ([]*domain.User, error) {
 	return nil, nil
 }

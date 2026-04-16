@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/yourorg/golang-modules/services/admin-service/internal/application"
-	transportREST "github.com/yourorg/golang-modules/services/admin-service/internal/transport/rest"
+	"github.com/Andrea-Cavallo/golang-modules/services/admin-service/internal/application"
+	transportREST "github.com/Andrea-Cavallo/golang-modules/services/admin-service/internal/transport/rest"
 )
 
 const (

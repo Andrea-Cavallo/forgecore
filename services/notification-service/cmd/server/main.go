@@ -10,11 +10,11 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	natsclient "github.com/nats-io/nats.go"
-	"github.com/yourorg/golang-modules/services/notification-service/internal/application"
-	pgRepo "github.com/yourorg/golang-modules/services/notification-service/internal/infrastructure/postgres"
-	"github.com/yourorg/golang-modules/services/notification-service/internal/infrastructure/email"
-	"github.com/yourorg/golang-modules/services/notification-service/internal/infrastructure/sms"
-	transportNATS "github.com/yourorg/golang-modules/services/notification-service/internal/transport/nats"
+	"github.com/Andrea-Cavallo/golang-modules/services/notification-service/internal/application"
+	pgRepo "github.com/Andrea-Cavallo/golang-modules/services/notification-service/internal/infrastructure/postgres"
+	"github.com/Andrea-Cavallo/golang-modules/services/notification-service/internal/infrastructure/email"
+	"github.com/Andrea-Cavallo/golang-modules/services/notification-service/internal/infrastructure/sms"
+	transportNATS "github.com/Andrea-Cavallo/golang-modules/services/notification-service/internal/transport/nats"
 )
 
 func main() {

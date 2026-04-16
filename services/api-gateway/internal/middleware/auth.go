@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/yourorg/golang-modules/services/api-gateway/internal/clients/authgrpc"
+	"github.com/Andrea-Cavallo/golang-modules/services/api-gateway/internal/clients/authgrpc"
 )
 
 // publicPaths are URL path prefixes that bypass JWT authentication.

@@ -16,8 +16,8 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/status"
 
-	"github.com/yourorg/golang-modules/services/auth-service/internal/application"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/domain"
 )
 
 func init() {

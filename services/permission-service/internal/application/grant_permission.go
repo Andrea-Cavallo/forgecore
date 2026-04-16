@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/permission-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/permission-service/internal/domain"
 )
 
 type GrantPermissionInput struct {

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/domain"
-	"github.com/yourorg/golang-modules/shared/crypto"
-	"github.com/yourorg/golang-modules/shared/events"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/shared/crypto"
+	"github.com/Andrea-Cavallo/golang-modules/shared/events"
 	"golang.org/x/crypto/bcrypt"
 )
 

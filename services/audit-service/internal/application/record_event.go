@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/audit-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/audit-service/internal/domain"
 )
 
 type RecordEventInput struct {

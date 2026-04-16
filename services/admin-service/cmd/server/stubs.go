@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/admin-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/services/admin-service/internal/application"
 )
 
 // stubTenantClient is a placeholder until gRPC clients are implemented in Phase 7.

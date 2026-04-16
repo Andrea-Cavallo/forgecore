@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yourorg/golang-modules/services/payment-service/internal/domain"
-	stripe "github.com/yourorg/golang-modules/services/payment-service/internal/infrastructure/providers/stripe"
-	"github.com/yourorg/golang-modules/shared/events"
+	"github.com/Andrea-Cavallo/golang-modules/services/payment-service/internal/domain"
+	stripe "github.com/Andrea-Cavallo/golang-modules/services/payment-service/internal/infrastructure/providers/stripe"
+	"github.com/Andrea-Cavallo/golang-modules/shared/events"
 )
 
 const (

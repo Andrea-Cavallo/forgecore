@@ -1,0 +1,64 @@
+groups:
+  - name: service_health
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Servizio {{ $labels.job }} non raggiungibile"
+          description: "Il target {{ $labels.instance }} è down da più di 1 minuto."
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (job)
+          /
+          sum(rate(http_requests_total[5m])) by (job)
+          > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Error rate > 5% su {{ $labels.job }}"
+          description: "Error rate {{ $value | humanizePercentage }} negli ultimi 5 minuti."
+
+      - alert: HighLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (job, le)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latenza p99 > 500ms su {{ $labels.job }}"
+          description: "p99 latenza {{ $value | humanizeDuration }} negli ultimi 5 minuti."
+
+      - alert: JobFailed
+        expr: job_last_execution_status == 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Job {{ $labels.job_name }} fallito"
+          description: "L'ultimo run del job {{ $labels.job_name }} è terminato con errore."
+
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL non raggiungibile"
+          description: "Il database PostgreSQL è down da più di 1 minuto."
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis non raggiungibile"
+          description: "Redis è down da più di 1 minuto."

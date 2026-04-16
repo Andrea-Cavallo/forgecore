@@ -8,8 +8,8 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/payment-service/internal/application"
-	"github.com/yourorg/golang-modules/shared/pagination"
+	"github.com/Andrea-Cavallo/golang-modules/services/payment-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/shared/pagination"
 )
 
 const (

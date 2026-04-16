@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/yourorg/golang-modules/services/notification-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/notification-service/internal/domain"
 )
 
 const (

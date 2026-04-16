@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/config-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/services/config-service/internal/application"
 )
 
 const headerTenantID = "X-Tenant-ID"

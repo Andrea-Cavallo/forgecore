@@ -1,6 +1,6 @@
-module github.com/yourorg/golang-modules/services/api-gateway
+module github.com/Andrea-Cavallo/golang-modules/services/api-gateway
 
-go 1.24
+go 1.26
 
 require (
 	github.com/google/uuid v1.6.0
@@ -15,4 +15,4 @@ require (
 	google.golang.org/protobuf v1.35.2 // indirect
 )
 
-replace github.com/yourorg/golang-modules/shared => ../../shared
+replace github.com/Andrea-Cavallo/golang-modules/shared => ../../shared

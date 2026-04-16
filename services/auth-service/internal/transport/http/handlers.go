@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/yourorg/golang-modules/services/auth-service/internal/application"
-	"github.com/yourorg/golang-modules/shared/middleware"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/shared/middleware"
 )
 
 type Handler struct {

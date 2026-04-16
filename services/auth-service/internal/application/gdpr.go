@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/domain"
 )
 
 // ExportDataOutput holds all user data returned for a GDPR export request.

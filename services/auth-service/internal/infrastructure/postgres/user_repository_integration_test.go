@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/domain"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/infrastructure/postgres"
-	"github.com/yourorg/golang-modules/shared/pagination"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/infrastructure/postgres"
+	"github.com/Andrea-Cavallo/golang-modules/shared/pagination"
 )
 
 func TestUserRepo_CreateAndGetByEmailHash(t *testing.T) {

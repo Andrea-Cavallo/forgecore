@@ -1,6 +1,6 @@
-module github.com/yourorg/golang-modules/services/config-service
+module github.com/Andrea-Cavallo/golang-modules/services/config-service
 
-go 1.24
+go 1.26
 
 require (
 	github.com/google/uuid v1.6.0
@@ -19,4 +19,4 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 )
 
-replace github.com/yourorg/golang-modules/shared => ../../shared
+replace github.com/Andrea-Cavallo/golang-modules/shared => ../../shared

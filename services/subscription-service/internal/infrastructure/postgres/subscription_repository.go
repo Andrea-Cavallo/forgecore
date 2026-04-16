@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/golang-modules/services/subscription-service/internal/domain"
-	"github.com/yourorg/golang-modules/shared/pagination"
+	"github.com/Andrea-Cavallo/golang-modules/services/subscription-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/shared/pagination"
 )
 
 type SubscriptionRepository struct {

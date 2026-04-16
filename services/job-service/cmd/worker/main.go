@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/yourorg/golang-modules/services/job-service/internal/jobs"
-	"github.com/yourorg/golang-modules/services/job-service/internal/scheduler"
+	"github.com/Andrea-Cavallo/golang-modules/services/job-service/internal/jobs"
+	"github.com/Andrea-Cavallo/golang-modules/services/job-service/internal/scheduler"
 )
 
 func main() {

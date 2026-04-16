@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/golang-modules/services/webhook-service/internal/application"
-	pgRepo "github.com/yourorg/golang-modules/services/webhook-service/internal/infrastructure/postgres"
-	transportREST "github.com/yourorg/golang-modules/services/webhook-service/internal/transport/rest"
+	"github.com/Andrea-Cavallo/golang-modules/services/webhook-service/internal/application"
+	pgRepo "github.com/Andrea-Cavallo/golang-modules/services/webhook-service/internal/infrastructure/postgres"
+	transportREST "github.com/Andrea-Cavallo/golang-modules/services/webhook-service/internal/transport/rest"
 )
 
 const (

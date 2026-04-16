@@ -8,8 +8,8 @@ import (
 
 	natsclient "github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/yourorg/golang-modules/services/notification-service/internal/application"
-	"github.com/yourorg/golang-modules/shared/events"
+	"github.com/Andrea-Cavallo/golang-modules/services/notification-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/shared/events"
 )
 
 const (

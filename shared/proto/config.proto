@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package config.v1;
 
-option go_package = "github.com/yourorg/golang-modules/shared/proto/config/v1;configv1";
+option go_package = "github.com/Andrea-Cavallo/golang-modules/shared/proto/config/v1;configv1";
 
 // ConfigService provides per-tenant feature flags and configuration values.
 service ConfigService {

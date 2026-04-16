@@ -10,9 +10,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	natsclient "github.com/nats-io/nats.go"
-	"github.com/yourorg/golang-modules/services/audit-service/internal/application"
-	pgRepo "github.com/yourorg/golang-modules/services/audit-service/internal/infrastructure/postgres"
-	transportNATS "github.com/yourorg/golang-modules/services/audit-service/internal/transport/nats"
+	"github.com/Andrea-Cavallo/golang-modules/services/audit-service/internal/application"
+	pgRepo "github.com/Andrea-Cavallo/golang-modules/services/audit-service/internal/infrastructure/postgres"
+	transportNATS "github.com/Andrea-Cavallo/golang-modules/services/audit-service/internal/transport/nats"
 )
 
 func main() {

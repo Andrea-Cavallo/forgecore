@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yourorg/golang-modules/services/auth-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/domain"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/permission-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/services/permission-service/internal/application"
 )
 
 const (

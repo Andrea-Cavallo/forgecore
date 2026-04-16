@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package audit.v1;
 
-option go_package = "github.com/yourorg/golang-modules/shared/proto/audit/v1;auditv1";
+option go_package = "github.com/Andrea-Cavallo/golang-modules/shared/proto/audit/v1;auditv1";
 
 // AuditService exposes audit log reads for internal gRPC calls.
 service AuditService {

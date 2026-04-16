@@ -12,10 +12,10 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
-	"github.com/yourorg/golang-modules/services/config-service/internal/application"
-	pgRepo "github.com/yourorg/golang-modules/services/config-service/internal/infrastructure/postgres"
-	redisCache "github.com/yourorg/golang-modules/services/config-service/internal/infrastructure/redis"
-	transportREST "github.com/yourorg/golang-modules/services/config-service/internal/transport/rest"
+	"github.com/Andrea-Cavallo/golang-modules/services/config-service/internal/application"
+	pgRepo "github.com/Andrea-Cavallo/golang-modules/services/config-service/internal/infrastructure/postgres"
+	redisCache "github.com/Andrea-Cavallo/golang-modules/services/config-service/internal/infrastructure/redis"
+	transportREST "github.com/Andrea-Cavallo/golang-modules/services/config-service/internal/transport/rest"
 )
 
 const (

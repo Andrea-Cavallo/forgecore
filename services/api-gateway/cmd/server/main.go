@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/yourorg/golang-modules/services/api-gateway/internal/clients/authgrpc"
-	"github.com/yourorg/golang-modules/services/api-gateway/internal/middleware"
-	"github.com/yourorg/golang-modules/services/api-gateway/internal/proxy"
-	"github.com/yourorg/golang-modules/services/api-gateway/internal/router"
+	"github.com/Andrea-Cavallo/golang-modules/services/api-gateway/internal/clients/authgrpc"
+	"github.com/Andrea-Cavallo/golang-modules/services/api-gateway/internal/middleware"
+	"github.com/Andrea-Cavallo/golang-modules/services/api-gateway/internal/proxy"
+	"github.com/Andrea-Cavallo/golang-modules/services/api-gateway/internal/router"
 )
 
 const (

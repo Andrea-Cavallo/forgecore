@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/storage-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/storage-service/internal/domain"
 )
 
 const presignTTLSeconds = 3600

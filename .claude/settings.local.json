@@ -3,7 +3,11 @@
     "allow": [
       "Bash(xargs wc:*)",
       "Bash(grep -v \"github.com/google/uuid\\\\|context\\\\|time\\\\|errors\\\\|^--$\\\\|^import\")",
-      "Bash(echo \"exit:$?\")"
+      "Bash(echo \"exit:$?\")",
+      "Bash(go mod:*)",
+      "Bash(go build:*)",
+      "Bash(go vet:*)",
+      "Bash(go test:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

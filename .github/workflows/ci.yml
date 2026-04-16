@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: golangci-lint shared
+        uses: golangci/golangci-lint-action@v6
+        with:
+          working-directory: shared
+          args: ./...
+
+      - name: golangci-lint services
+        run: |
+          for svc in services/*/; do
+            echo "=== lint $svc ==="
+            cd "$svc"
+            golangci-lint run ./...
+            cd ../..
+          done
+
+  test:
+    name: Unit + Integration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Unit tests — shared
+        working-directory: shared
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Unit tests — services
+        run: |
+          for svc in services/*/; do
+            echo "=== test $svc ==="
+            cd "$svc"
+            go test -race -coverprofile=coverage.out ./internal/domain/... ./internal/application/... || true
+            cd ../..
+          done
+
+      - name: Integration tests — auth-service
+        working-directory: services/auth-service
+        env:
+          POSTGRES_DSN: postgres://postgres:test@localhost:5432/testdb?sslmode=disable
+          REDIS_ADDR: localhost:6379
+        run: go test -tags=integration -race ./internal/infrastructure/...
+
+  build:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build all service images
+        run: |
+          for svc in services/*/; do
+            name=$(basename "$svc")
+            echo "=== build $name ==="
+            docker build -t ghcr.io/andrea-cavallo/golang-modules/$name:${{ github.sha }} "$svc"
+          done

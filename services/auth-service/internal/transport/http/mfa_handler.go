@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/auth-service/internal/application"
-	"github.com/yourorg/golang-modules/shared/middleware"
+	"github.com/Andrea-Cavallo/golang-modules/services/auth-service/internal/application"
+	"github.com/Andrea-Cavallo/golang-modules/shared/middleware"
 )
 
 // mfaEnableExecutor abstracts EnableMFAUseCase for testability.

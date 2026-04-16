@@ -13,11 +13,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/yourorg/golang-modules/services/payment-service/internal/application"
-	pgRepo "github.com/yourorg/golang-modules/services/payment-service/internal/infrastructure/postgres"
-	"github.com/yourorg/golang-modules/services/payment-service/internal/infrastructure/providers/stripe"
-	transportHTTP "github.com/yourorg/golang-modules/services/payment-service/internal/transport/http"
-	"github.com/yourorg/golang-modules/shared/events"
+	"github.com/Andrea-Cavallo/golang-modules/services/payment-service/internal/application"
+	pgRepo "github.com/Andrea-Cavallo/golang-modules/services/payment-service/internal/infrastructure/postgres"
+	"github.com/Andrea-Cavallo/golang-modules/services/payment-service/internal/infrastructure/providers/stripe"
+	transportHTTP "github.com/Andrea-Cavallo/golang-modules/services/payment-service/internal/transport/http"
+	"github.com/Andrea-Cavallo/golang-modules/shared/events"
 )
 
 const (

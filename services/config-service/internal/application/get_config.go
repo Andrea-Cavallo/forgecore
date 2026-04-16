@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/config-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/config-service/internal/domain"
 )
 
 type GetConfigInput struct {

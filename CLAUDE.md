@@ -8,7 +8,7 @@
 
 ## Project Goal
 
-Build a production-ready Go 1.24 microservices monorepo called `superpowers`.
+Build a production-ready Go 1.26 microservices monorepo called `superpowers`.
 12 services, DDD architecture, Docker Compose deploy, multi-tenant PostgreSQL RLS.
 
 Root: `C:\Users\Andrea\Desktop\golang-modules\`
@@ -76,9 +76,9 @@ conn.Exec(ctx, "SET LOCAL app.tenant_id = $1", tenantID)
 
 ### go.mod (per service)
 ```
-module github.com/yourorg/golang-modules/services/<service-name>
+module github.com/Andrea-Cavallo/golang-modules/services/<service-name>
 
-go 1.24
+go 1.26
 
 require (
     github.com/google/uuid v1.6.0

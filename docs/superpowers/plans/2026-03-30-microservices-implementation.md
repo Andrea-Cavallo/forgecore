@@ -2757,49 +2757,41 @@ Aggiunto `google.golang.org/grpc v1.70.0` in go.mod. Eseguire `go mod tidy` prim
 
 # FASE 3 — API Gateway
 
-## Task 3.1: Reverse proxy base + routing
+## Task 3.1: Reverse proxy base + routing ✅
 **Files:** `services/api-gateway/internal/proxy/proxy.go`, `internal/router/routes.go`
+_Completato 2026-04-13: ReverseProxy con routing per prefisso /v1/auth/, /v1/payments/, ecc._
 
-Implementa: `httputil.ReverseProxy` verso i servizi, routing per prefisso `/v1/auth/` → auth-service:8081.
-
-## Task 3.2: Middleware chain
+## Task 3.2: Middleware chain ✅
 **Files:** `internal/middleware/requestid.go`, `internal/middleware/logger.go`, `internal/middleware/cors.go`
+_Completato 2026-04-13: RequestID (X-Request-ID), structured logger, CORS configurabile._
 
-Implementa: RequestID (X-Request-ID header), structured logger per ogni request/response, CORS configurabile.
-
-## Task 3.3: Rate limiting (Redis token bucket)
+## Task 3.3: Rate limiting (Redis token bucket) ✅
 **Files:** `internal/middleware/ratelimit.go`
+_Completato 2026-04-13: 100 req/min anonimo, 1000 req/min autenticato, header X-RateLimit-*_
 
-Implementa: 100 req/min per IP anonimo, 1000 req/min per utente autenticato. Header `X-RateLimit-*`.
-
-## Task 3.4: Auth middleware (gRPC call a auth-service)
+## Task 3.4: Auth middleware (gRPC call a auth-service) ✅
 **Files:** `internal/middleware/auth.go`
+_Completato 2026-04-13: verifica JWT via gRPC ValidateToken, propaga X-User-ID, X-Tenant-ID, X-User-Roles_
 
-Implementa: verifica JWT via gRPC `ValidateToken`, propaga `X-User-ID`, `X-Tenant-ID`, `X-User-Roles` ai servizi downstream.
-
-## Task 3.5: Security headers (middleware)
+## Task 3.5: Security headers (middleware) ✅
 **Files:** `internal/middleware/security_headers.go`
-
-Implementa: HSTS, X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy.
+_Completato 2026-04-13: HSTS, X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy_
 
 ---
 
 # FASE 4 — Payment Service
 
-## Task 4.1: Payment domain + repository
+## Task 4.1: Payment domain + repository ✅
 **Files:** `services/payment-service/internal/domain/payment.go`, `internal/infrastructure/postgres/payment_repo.go`
+_Completato 2026-04-13: entità Payment, PaymentProvider interface, schema PostgreSQL con RLS_
 
-Implementa: entita' `Payment`, `PaymentProvider` interface, schema PostgreSQL con RLS.
-
-## Task 4.2: Stripe adapter
+## Task 4.2: Stripe adapter ✅
 **Files:** `internal/infrastructure/providers/stripe/stripe.go`
+_Completato 2026-04-13: CreatePaymentIntent, ConfirmPayment, Refund, ConstructWebhookEvent via net/http_
 
-Implementa: `CreatePaymentIntent`, `ConfirmPayment`, `Refund`, `ConstructWebhookEvent`. Usa `stripe-go/v76`.
-
-## Task 4.3: CreatePaymentUseCase + idempotency
+## Task 4.3: CreatePaymentUseCase + idempotency ✅
 **Files:** `internal/application/create_payment.go`
-
-Implementa: verifica identita' via gRPC auth, idempotency key Redis, call provider, persist Payment{pending}.
+_Completato 2026-04-13: verifica identità via gRPC auth, idempotency key Redis, call provider, persist Payment_
 
 ## Task 4.4: WebhookUseCase ✅
 **Files:** `internal/application/webhook.go`
@@ -2851,15 +2843,13 @@ _Completato 2026-04-12: scheduler tick-based, CleanupTokens handler con Redis sc
 **Files:** `services/permission-service/internal/domain/`, `internal/application/check_permission.go`, `internal/infrastructure/postgres/role_repository.go`
 _Completato 2026-04-12: CheckPermission con direct perm + role fallback, RoleRepository, REST transport, main.go_
 
-## Task 7.2: Default roles per tenant
+## Task 7.2: Default roles per tenant ✅
 **Files:** `internal/application/seed_roles.go`
+_Completato 2026-04-13: SeedRolesUseCase crea owner/admin/billing-manager/read-only/user per tenant. Idempotente via GetByName._
 
-Crea ruoli predefiniti (`owner`, `admin`, `billing-manager`, `read-only`, `user`) su ogni nuovo tenant.
-
-## Task 7.3: SDK Go client
+## Task 7.3: SDK Go client ✅
 **Files:** `sdk/go/auth/client.go`, `sdk/go/permission/client.go`, `sdk/go/common/`
-
-Client con retry (3x), circuit breaker (`gobreaker`), trace propagation OTEL.
+_Completato 2026-04-13: retry 3x con backoff esponenziale, circuit breaker gobreaker, OTEL trace propagation via OTELTransport._
 
 ---
 
@@ -2889,116 +2879,29 @@ _Completato 2026-04-12: StripeProvider CreateSubscription/Cancel/ChangePlan, Pla
 
 # FASE 10 — Observability + HA + CI/CD
 
-## Task 10.1: Prometheus + Grafana dashboards
+## Task 10.1: Prometheus + Grafana dashboards ✅
 **Files:** `deployments/prometheus/prometheus.yml`, `deployments/grafana/provisioning/dashboards/`
+_Completato 2026-04-13: scraping 11 servizi + postgres/redis/nats; dashboard services.json (request rate, error rate, p99 latency, servizi up)_
 
-Configura: scraping di tutti i servizi, dashboard pre-provisionate (request rate, latency p99, error rate).
-
-## Task 10.2: AlertManager rules
+## Task 10.2: AlertManager rules ✅
 **Files:** `deployments/alertmanager/alertmanager.yml`, `deployments/prometheus/rules.yml`
+_Completato 2026-04-13: alert ServiceDown, HighErrorRate>5%, HighLatencyP99>500ms, JobFailed, PostgresDown, RedisDown; routing PagerDuty/Slack/email_
 
-Configura: alert per servizio down, error rate >5%, latency p99 >500ms, job fallito.
-
-## Task 10.3: OpenTelemetry collector + Jaeger
+## Task 10.3: OpenTelemetry collector + Jaeger ✅
 **Files:** `deployments/otel-collector.yml`
+_Completato 2026-04-13: OTLP HTTP+gRPC receiver, batch processor, esporta a Jaeger:4317 e Prometheus:8889_
 
-Configura: collector riceve da tutti i servizi via OTLP HTTP, esporta a Jaeger.
-
-## Task 10.4: GitHub Actions CI — lint + test + build
+## Task 10.4: GitHub Actions CI — lint + test + build ✅
 **Files:** `.github/workflows/ci.yml`
+_Completato 2026-04-13: go 1.26, lint shared+services, unit+integration test con postgres/redis service containers, docker build ghcr.io/andrea-cavallo/_
 
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on: [push, pull_request]
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with: { go-version: '1.24' }
-      - uses: golangci/golangci-lint-action@v4
-        with: { args: ./... }
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with: { go-version: '1.24' }
-      - name: Run unit tests
-        run: |
-          for svc in services/*/; do
-            cd $svc && go test -race -coverprofile=coverage.out ./internal/domain/... ./internal/application/... && cd ../..
-          done
-      - name: Run integration tests
-        run: |
-          for svc in services/*/; do
-            cd $svc && go test -tags=integration -race ./internal/infrastructure/... && cd ../..
-          done
-
-  build:
-    runs-on: ubuntu-latest
-    needs: [lint, test]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Build all service images
-        run: |
-          for svc in services/*/; do
-            docker build -t ghcr.io/yourorg/$(basename $svc):${{ github.sha }} $svc
-          done
-```
-
-## Task 10.5: GitHub Actions CD — deploy con rolling update
+## Task 10.5: GitHub Actions CD — deploy con rolling update ✅
 **Files:** `.github/workflows/deploy.yml`
+_Completato 2026-04-13: push immagini su GHCR + deploy SSH rolling update con health check per servizio + migrate.sh_
 
-```yaml
-# .github/workflows/deploy.yml
-name: Deploy
-on:
-  push:
-    branches: [main]
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Push images
-        run: |
-          echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          for svc in services/*/; do
-            docker push ghcr.io/yourorg/$(basename $svc):${{ github.sha }}
-          done
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /app/golang-modules/deployments
-            # Rolling update: pull nuove immagini, riavvia servizio per servizio
-            for svc in auth-service payment-service notification-service admin-service \
-                        audit-service job-service api-gateway permission-service \
-                        config-service webhook-service storage-service subscription-service; do
-              docker compose pull $svc
-              docker compose up -d --no-deps $svc
-              # Health check
-              for i in $(seq 1 30); do
-                if curl -sf http://localhost:8081/health/ready > /dev/null 2>&1; then break; fi
-                sleep 2
-              done
-            done
-            # Run migrations
-            ./scripts/migrate.sh all up
-```
-
-## Task 10.6: Bootstrap script + documentazione finale
-**Files:** `scripts/bootstrap.sh`, `README.md`
-
-Script che esegue in sequenza: `vault-init.sh` → `nats-init.sh` → `migrate.sh all up` → seed primo super-admin.
+## Task 10.6: Bootstrap script + documentazione finale ✅
+**Files:** `scripts/bootstrap.sh`
+_Completato 2026-04-13: script bash con vault-init → nats-init → migrate all up → seed super-admin; supporta --skip-vault/--skip-nats/--skip-seed_
 
 ---
 

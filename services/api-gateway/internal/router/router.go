@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 
-	"github.com/yourorg/golang-modules/services/api-gateway/internal/proxy"
+	"github.com/Andrea-Cavallo/golang-modules/services/api-gateway/internal/proxy"
 )
 
 // Router maps URL prefixes to upstream service proxies.

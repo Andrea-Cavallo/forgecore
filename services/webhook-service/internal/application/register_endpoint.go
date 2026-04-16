@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourorg/golang-modules/services/webhook-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/webhook-service/internal/domain"
 )
 
 type RegisterEndpointInput struct {

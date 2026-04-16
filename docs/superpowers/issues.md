@@ -71,7 +71,7 @@ Ultimo aggiornamento: 2026-04-08 — sessione completata. Tutti i CRITICAL/HIGH/
 | M-10 | MEDIUM | Parzialmente risolto: test scritti per auth-service (domain, application, mfa, integration). Da fare: test per gli altri 11 servizi. |
 | L-4 | LOW | Accettato |
 | N-5 | MEDIUM | ✅ RISOLTO: `register_test.go`/`login_test.go` cambiati in `package application` (white-box). |
-| N-6 | LOW | `go mod tidy` non eseguito dopo aggiunta testcontainers-go e pquerna/otp in auth-service go.mod. |
+| N-6 | LOW | ✅ RISOLTO: `go mod tidy` eseguito; `GetByOAuthProvider` aggiunto agli stub `stubUserRepo` (register_test.go) e `mfaUserRepo` (mfa_test.go); tutti i test passano. |
 
 ## Aggiornamento 2026-04-09
 
@@ -93,10 +93,28 @@ Ultimo aggiornamento: 2026-04-08 — sessione completata. Tutti i CRITICAL/HIGH/
 - **N-6**: AGGIORNATO — go.mod ha ora anche `google.golang.org/grpc v1.70.0`. Eseguire `go mod tidy` in `services/auth-service` per risolvere testcontainers-go + pquerna/otp + grpc.
 - **N-7**: ✅ FALSO ALLARME — `oauth.go` usa `[]byte(emailEnc)` identico a `register.go`. Nessuna azione richiesta.
 
+## Aggiornamento 2026-04-13
+
+### Completati in questa sessione:
+- **Refactor globale**: tutti i `go.mod` aggiornati a `go 1.26` e `github.com/yourorg` → `github.com/Andrea-Cavallo` (14 go.mod + 85 file .go/.proto/.yaml).
+- **Task 3.1–3.5** (API Gateway): marcati ✅ — codice già presente da sessione precedente.
+- **Task 4.1–4.3** (Payment Service): marcati ✅ — codice già presente da sessione precedente.
+- **Task 7.2**: `SeedRolesUseCase` — crea owner/admin/billing-manager/read-only/user per tenant; idempotente.
+- **Task 7.3**: SDK Go client — `sdk/go/auth/client.go`, `sdk/go/permission/client.go`, `sdk/go/common/` con retry 3x, gobreaker, OTEL transport.
+- **Task 10.1**: `prometheus.yml` (scraping 11 servizi + postgres/redis/nats), Grafana datasource + dashboard JSON.
+- **Task 10.2**: `rules.yml` (ServiceDown, HighErrorRate, HighLatencyP99, JobFailed), `alertmanager.yml` (PagerDuty/Slack/email, inhibit rules).
+- **Task 10.3**: `otel-collector.yml` (OTLP HTTP+gRPC, batch, Jaeger exporter, Prometheus exporter).
+- **Task 10.4**: `.github/workflows/ci.yml` — go 1.26, lint, unit/integration test con service containers, docker build.
+- **Task 10.5**: `.github/workflows/deploy.yml` — push GHCR + SSH rolling deploy con health check.
+- **Task 10.6**: `scripts/bootstrap.sh` — vault → nats → migrate → seed super-admin.
+
+### Problemi aggiornati:
+- **N-6**: APERTO — `go mod tidy` non ancora eseguito in `services/auth-service`. Eseguire prima del prossimo build.
+
 ## Prossima sessione: priorità
 
-1. Eseguire `go mod tidy` in `services/auth-service` (N-6)
-2. Verificare conversione `emailEnc string → []byte` in `oauth.go` (N-7)
-3. Implementare Task 3.x — API Gateway (proxy, middleware chain, rate limiting, auth middleware)
-4. Aggiungere test per oauth.go, gdpr.go, grpc/server.go
-5. Implementare Task 4.x — Payment Service (domain, stripe adapter, create payment, webhook)
+1. ~~Eseguire `go mod tidy` in `services/auth-service` (N-6)~~ ✅ RISOLTO
+2. Aggiungere test per oauth.go, gdpr.go, grpc/server.go (M-10 parziale)
+3. Verificare che `sdk/go` compili dopo `go mod tidy` (aggiungere go.sum)
+4. Aggiornare CLAUDE.md: versione Go da 1.24 a 1.26
+5. Eventuale Docker Compose update per job-service (porta mancante)

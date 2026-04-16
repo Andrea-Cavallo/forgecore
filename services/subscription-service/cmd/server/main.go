@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/golang-modules/services/subscription-service/internal/application"
-	stripeBilling "github.com/yourorg/golang-modules/services/subscription-service/internal/infrastructure/billing"
-	pgRepo "github.com/yourorg/golang-modules/services/subscription-service/internal/infrastructure/postgres"
-	transportREST "github.com/yourorg/golang-modules/services/subscription-service/internal/transport/rest"
+	"github.com/Andrea-Cavallo/golang-modules/services/subscription-service/internal/application"
+	stripeBilling "github.com/Andrea-Cavallo/golang-modules/services/subscription-service/internal/infrastructure/billing"
+	pgRepo "github.com/Andrea-Cavallo/golang-modules/services/subscription-service/internal/infrastructure/postgres"
+	transportREST "github.com/Andrea-Cavallo/golang-modules/services/subscription-service/internal/transport/rest"
 )
 
 const (

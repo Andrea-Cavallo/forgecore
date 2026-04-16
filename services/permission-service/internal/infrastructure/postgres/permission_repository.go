@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/golang-modules/services/permission-service/internal/domain"
+	"github.com/Andrea-Cavallo/golang-modules/services/permission-service/internal/domain"
 )
 
 type PermissionRepository struct {

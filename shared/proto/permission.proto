@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package permission.v1;
 
-option go_package = "github.com/yourorg/golang-modules/shared/proto/permission/v1;permissionv1";
+option go_package = "github.com/Andrea-Cavallo/golang-modules/shared/proto/permission/v1;permissionv1";
 
 // PermissionService evaluates resource-based access control policies.
 service PermissionService {

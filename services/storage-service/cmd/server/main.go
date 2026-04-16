@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/golang-modules/services/storage-service/internal/application"
-	minioProvider "github.com/yourorg/golang-modules/services/storage-service/internal/infrastructure/minio"
-	pgRepo "github.com/yourorg/golang-modules/services/storage-service/internal/infrastructure/postgres"
-	transportREST "github.com/yourorg/golang-modules/services/storage-service/internal/transport/rest"
+	"github.com/Andrea-Cavallo/golang-modules/services/storage-service/internal/application"
+	minioProvider "github.com/Andrea-Cavallo/golang-modules/services/storage-service/internal/infrastructure/minio"
+	pgRepo "github.com/Andrea-Cavallo/golang-modules/services/storage-service/internal/infrastructure/postgres"
+	transportREST "github.com/Andrea-Cavallo/golang-modules/services/storage-service/internal/transport/rest"
 )
 
 const (

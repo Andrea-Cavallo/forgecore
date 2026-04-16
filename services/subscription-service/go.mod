@@ -1,11 +1,11 @@
-module github.com/yourorg/golang-modules/services/subscription-service
+module github.com/Andrea-Cavallo/golang-modules/services/subscription-service
 
-go 1.24
+go 1.26
 
 require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.0
-	github.com/yourorg/golang-modules/shared v0.0.0
+	github.com/Andrea-Cavallo/golang-modules/shared v0.0.0
 )
 
 require (
@@ -17,4 +17,4 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 )
 
-replace github.com/yourorg/golang-modules/shared => ../../shared
+replace github.com/Andrea-Cavallo/golang-modules/shared => ../../shared

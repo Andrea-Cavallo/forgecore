@@ -1,0 +1,83 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: superpowers
+    env: production
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - "rules.yml"
+
+scrape_configs:
+  - job_name: auth-service
+    static_configs:
+      - targets: ["auth-service:8081"]
+    metrics_path: /metrics
+
+  - job_name: api-gateway
+    static_configs:
+      - targets: ["api-gateway:8080"]
+    metrics_path: /metrics
+
+  - job_name: payment-service
+    static_configs:
+      - targets: ["payment-service:8082"]
+    metrics_path: /metrics
+
+  - job_name: notification-service
+    static_configs:
+      - targets: ["notification-service:8083"]
+    metrics_path: /metrics
+
+  - job_name: admin-service
+    static_configs:
+      - targets: ["admin-service:8084"]
+    metrics_path: /metrics
+
+  - job_name: audit-service
+    static_configs:
+      - targets: ["audit-service:8085"]
+    metrics_path: /metrics
+
+  - job_name: permission-service
+    static_configs:
+      - targets: ["permission-service:8087"]
+    metrics_path: /metrics
+
+  - job_name: config-service
+    static_configs:
+      - targets: ["config-service:8088"]
+    metrics_path: /metrics
+
+  - job_name: webhook-service
+    static_configs:
+      - targets: ["webhook-service:8089"]
+    metrics_path: /metrics
+
+  - job_name: storage-service
+    static_configs:
+      - targets: ["storage-service:8090"]
+    metrics_path: /metrics
+
+  - job_name: subscription-service
+    static_configs:
+      - targets: ["subscription-service:8091"]
+    metrics_path: /metrics
+
+  - job_name: postgres
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  - job_name: redis
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+
+  - job_name: nats
+    static_configs:
+      - targets: ["nats:8222"]
+    metrics_path: /metrics
