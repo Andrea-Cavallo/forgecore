@@ -9,6 +9,11 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	DefaultLimit = 50
+	MaxLimit     = 100
+)
+
 // Cursor holds the position for cursor-based pagination.
 type Cursor struct {
 	ID        uuid.UUID `json:"id"`
@@ -46,10 +51,20 @@ func Decode(s string) (Cursor, error) {
 	return c, nil
 }
 
+func NormalizeLimit(limit int) int {
+	if limit <= 0 {
+		return DefaultLimit
+	}
+	if limit > MaxLimit {
+		return MaxLimit
+	}
+	return limit
+}
+
 // SQL returns the WHERE clause fragment for cursor-based pagination.
 // Usage: WHERE (created_at, id) < ($1, $2) ORDER BY created_at DESC, id DESC LIMIT $3
 func SQL(cursor *Cursor, limit int) (where string, args []any, queryLimit int) {
-	queryLimit = limit + 1 // fetch one extra to detect next page
+	queryLimit = NormalizeLimit(limit) + 1
 	if cursor == nil {
 		return "", nil, queryLimit
 	}

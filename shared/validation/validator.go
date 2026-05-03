@@ -8,7 +8,15 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-var v = validator.New(validator.WithRequiredStructFields())
+var defaultValidator = NewValidator()
+
+type Validator struct {
+	validate *validator.Validate
+}
+
+func NewValidator() *Validator {
+	return &Validator{validate: validator.New()}
+}
 
 // FieldError represents a single validation error on a struct field.
 type FieldError struct {
@@ -29,7 +37,11 @@ func (fe FieldErrors) Error() string {
 
 // Validate runs struct validation and returns FieldErrors or nil.
 func Validate(input any) error {
-	err := v.Struct(input)
+	return defaultValidator.Validate(input)
+}
+
+func (v *Validator) Validate(input any) error {
+	err := v.validate.Struct(input)
 	if err == nil {
 		return nil
 	}

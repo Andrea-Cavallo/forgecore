@@ -1,4 +1,4 @@
-# Superpowers Microservices — Stato Implementazione
+# ForgeCore Microservices — Stato Implementazione
 
 Generato: 2026-04-02
 

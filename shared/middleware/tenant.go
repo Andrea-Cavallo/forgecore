@@ -9,7 +9,7 @@ import (
 
 type tenantKey struct{}
 
-const headerTenantID = "X-Tenant-ID"
+const HeaderTenantID = "X-Tenant-ID"
 
 // TenantFromContext retrieves the tenant ID stored in the context.
 func TenantFromContext(ctx context.Context) (uuid.UUID, bool) {
@@ -26,7 +26,7 @@ func WithTenant(ctx context.Context, tenantID uuid.UUID) context.Context {
 // and stores it in the request context. Returns 400 if missing or invalid.
 func TenantMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		raw := r.Header.Get(headerTenantID)
+		raw := r.Header.Get(HeaderTenantID)
 		if raw == "" {
 			http.Error(w, "tenant_id mancante", http.StatusBadRequest)
 			return

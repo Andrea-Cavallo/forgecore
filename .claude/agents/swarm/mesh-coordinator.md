@@ -773,7 +773,7 @@ mcp__claude-flow__swarm_monitor --interval=3000 --metrics="connectivity,latency,
 ### Consensus Operations
 ```bash
 # Propose network-wide decision
-mcp__claude-flow__daa_consensus --agents="all" --proposal="{\"task_assignment\":\"auth-service\",\"assigned_to\":\"node-3\"}"
+mcp__claude-flow__daa_consensus --agents="all" --proposal="{\"task_assignment\":\"forgecore-auth\",\"assigned_to\":\"node-3\"}"
 
 # Participate in voting
 mcp__claude-flow__daa_consensus --agents="current" --vote="approve" --proposal_id="prop-123"

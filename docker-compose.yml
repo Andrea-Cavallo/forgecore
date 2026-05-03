@@ -1,7 +1,7 @@
 version: "3.9"
 
 networks:
-  superpowers:
+  forgecore:
     driver: bridge
 
 volumes:
@@ -17,16 +17,16 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-superpowers}
+      POSTGRES_USER: ${POSTGRES_USER:-forgecore}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      POSTGRES_DB: ${POSTGRES_DB:-superpowers}
+      POSTGRES_DB: ${POSTGRES_DB:-forgecore}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    networks: [superpowers]
+    networks: [forgecore]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-superpowers}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-forgecore}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -38,7 +38,7 @@ services:
       - redis_data:/data
     ports:
       - "6379:6379"
-    networks: [superpowers]
+    networks: [forgecore]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -53,7 +53,7 @@ services:
     ports:
       - "4222:4222"
       - "8222:8222"
-    networks: [superpowers]
+    networks: [forgecore]
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
       interval: 5s
@@ -71,7 +71,7 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-    networks: [superpowers]
+    networks: [forgecore]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
@@ -88,7 +88,7 @@ services:
       - vault_data:/vault/data
     ports:
       - "8200:8200"
-    networks: [superpowers]
+    networks: [forgecore]
     cap_add: [IPC_LOCK]
 
   jaeger:
@@ -97,7 +97,7 @@ services:
       - "16686:16686"
       - "4317:4317"
       - "4318:4318"
-    networks: [superpowers]
+    networks: [forgecore]
 
   prometheus:
     image: prom/prometheus:v2.51.0
@@ -105,7 +105,7 @@ services:
       - ./deployments/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
       - "9090:9090"
-    networks: [superpowers]
+    networks: [forgecore]
 
   grafana:
     image: grafana/grafana:10.4.0
@@ -115,151 +115,151 @@ services:
       - ./deployments/grafana/provisioning:/etc/grafana/provisioning:ro
     ports:
       - "3000:3000"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on: [prometheus]
 
   # ── Microservices ─────────────────────────────────────────────────────────────
 
-  auth-service:
+  forgecore-auth:
     build:
       context: .
-      dockerfile: services/auth-service/Dockerfile
+      dockerfile: services/forgecore-auth/Dockerfile
     env_file: .env
     ports:
       - "${AUTH_PORT:-8081}:8081"
       - "${AUTH_GRPC_PORT:-9091}:9091"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
 
-  payment-service:
+  forgecore-payments:
     build:
       context: .
-      dockerfile: services/payment-service/Dockerfile
+      dockerfile: services/forgecore-payments/Dockerfile
     env_file: .env
     ports:
       - "${PAYMENT_PORT:-8082}:8082"
       - "${PAYMENT_GRPC_PORT:-9092}:9092"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}
       nats: {condition: service_healthy}
 
-  notification-service:
+  forgecore-notifications:
     build:
       context: .
-      dockerfile: services/notification-service/Dockerfile
+      dockerfile: services/forgecore-notifications/Dockerfile
     env_file: .env
     ports:
       - "${NOTIFICATION_PORT:-8083}:8083"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}
       nats: {condition: service_healthy}
 
-  admin-service:
+  forgecore-admin:
     build:
       context: .
-      dockerfile: services/admin-service/Dockerfile
+      dockerfile: services/forgecore-admin/Dockerfile
     env_file: .env
     ports:
       - "${ADMIN_PORT:-8084}:8084"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}
 
-  audit-service:
+  forgecore-audit:
     build:
       context: .
-      dockerfile: services/audit-service/Dockerfile
+      dockerfile: services/forgecore-audit/Dockerfile
     env_file: .env
     ports:
       - "${AUDIT_PORT:-8085}:8085"
       - "${AUDIT_GRPC_PORT:-9095}:9095"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}
       nats: {condition: service_healthy}
 
-  job-service:
+  forgecore-jobs:
     build:
       context: .
-      dockerfile: services/job-service/Dockerfile
+      dockerfile: services/forgecore-jobs/Dockerfile
     env_file: .env
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       redis: {condition: service_healthy}
       nats: {condition: service_healthy}
 
-  api-gateway:
+  forgecore-gateway:
     build:
       context: .
-      dockerfile: services/api-gateway/Dockerfile
+      dockerfile: services/forgecore-gateway/Dockerfile
     env_file: .env
     ports:
       - "${GATEWAY_PORT:-8080}:8080"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
-      - auth-service
+      - forgecore-auth
 
-  permission-service:
+  forgecore-permissions:
     build:
       context: .
-      dockerfile: services/permission-service/Dockerfile
+      dockerfile: services/forgecore-permissions/Dockerfile
     env_file: .env
     ports:
       - "${PERMISSION_PORT:-8087}:8087"
       - "${PERMISSION_GRPC_PORT:-9097}:9097"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}
 
-  config-service:
+  forgecore-config:
     build:
       context: .
-      dockerfile: services/config-service/Dockerfile
+      dockerfile: services/forgecore-config/Dockerfile
     env_file: .env
     ports:
       - "${CONFIG_PORT:-8088}:8088"
       - "${CONFIG_GRPC_PORT:-9098}:9098"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
 
-  webhook-service:
+  forgecore-webhooks:
     build:
       context: .
-      dockerfile: services/webhook-service/Dockerfile
+      dockerfile: services/forgecore-webhooks/Dockerfile
     env_file: .env
     ports:
       - "${WEBHOOK_PORT:-8089}:8089"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}
       nats: {condition: service_healthy}
 
-  storage-service:
+  forgecore-storage:
     build:
       context: .
-      dockerfile: services/storage-service/Dockerfile
+      dockerfile: services/forgecore-storage/Dockerfile
     env_file: .env
     ports:
       - "${STORAGE_PORT:-8090}:8090"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}
       minio: {condition: service_healthy}
 
-  subscription-service:
+  forgecore-subscriptions:
     build:
       context: .
-      dockerfile: services/subscription-service/Dockerfile
+      dockerfile: services/forgecore-subscriptions/Dockerfile
     env_file: .env
     ports:
       - "${SUBSCRIPTION_PORT:-8091}:8091"
       - "${SUBSCRIPTION_GRPC_PORT:-9099}:9099"
-    networks: [superpowers]
+    networks: [forgecore]
     depends_on:
       postgres: {condition: service_healthy}

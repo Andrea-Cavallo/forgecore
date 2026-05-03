@@ -11,6 +11,12 @@ type contextKey string
 
 const loggerKey contextKey = "logger"
 
+type ServiceInfo struct {
+	Service string
+	Version string
+	Env     string
+}
+
 func NewLogger(service, version, env string, w io.Writer) *slog.Logger {
 	if w == nil {
 		w = os.Stdout
@@ -22,6 +28,10 @@ func NewLogger(service, version, env string, w io.Writer) *slog.Logger {
 		"version", version,
 		"env", env,
 	)
+}
+
+func NewServiceLogger(info ServiceInfo, w io.Writer) *slog.Logger {
+	return NewLogger(info.Service, info.Version, info.Env, w)
 }
 
 func WithLogger(ctx context.Context, l *slog.Logger) context.Context {

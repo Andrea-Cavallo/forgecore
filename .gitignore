@@ -25,3 +25,21 @@ go.work.sum
 # env file
 .env
 
+# ForgeCore local assistant metadata and non-project artifacts
+CLAUDE.md
+AGENTS.md
+CLAUDE.local.md
+AGENTS.local.md
+claude-how-to.md
+.claude/
+.codex/
+.agents/
+graphify-out/
+.tokensave/
+.idea/
+*.db
+
+# Local scratch artifacts accidentally produced by shell output
+5%
+500ms
+Aggiorna

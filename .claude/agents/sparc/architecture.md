@@ -521,22 +521,22 @@ paths:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-service
+  name: forgecore-auth
   labels:
-    app: auth-service
+    app: forgecore-auth
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: auth-service
+      app: forgecore-auth
   template:
     metadata:
       labels:
-        app: auth-service
+        app: forgecore-auth
     spec:
       containers:
-      - name: auth-service
-        image: auth-service:latest
+      - name: forgecore-auth
+        image: forgecore-auth:latest
         ports:
         - containerPort: 3000
         env:
@@ -570,10 +570,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-service
+  name: forgecore-auth
 spec:
   selector:
-    app: auth-service
+    app: forgecore-auth
   ports:
   - protocol: TCP
     port: 80

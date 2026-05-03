@@ -1,6 +1,6 @@
 global:
   resolve_timeout: 5m
-  smtp_from: alerts@superpowers.io
+  smtp_from: alerts@forgecore.io
   smtp_smarthost: smtp:587
   smtp_auth_username: "${SMTP_USER}"
   smtp_auth_password: "${SMTP_PASSWORD}"
@@ -23,7 +23,7 @@ route:
 receivers:
   - name: default
     email_configs:
-      - to: oncall@superpowers.io
+      - to: oncall@forgecore.io
         send_resolved: true
 
   - name: pagerduty

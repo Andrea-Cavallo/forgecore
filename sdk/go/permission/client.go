@@ -1,4 +1,4 @@
-// Package permission fornisce il client SDK per permission-service.
+// Package permission fornisce il client SDK per forgecore-permissions.
 package permission
 
 import (
@@ -11,23 +11,24 @@ import (
 
 	"github.com/sony/gobreaker"
 
-	"github.com/Andrea-Cavallo/golang-modules/sdk/go/common"
+	"github.com/Andrea-Cavallo/golang-modules/sdk/go/clientretry"
+	"github.com/Andrea-Cavallo/golang-modules/sdk/go/clienttransport"
 )
 
 const defaultTimeout = 5 * time.Second
 
-// Client è il client HTTP per permission-service con retry, circuit breaker e OTEL.
+// Client è il client HTTP per forgecore-permissions con retry, circuit breaker e OTEL.
 type Client struct {
 	baseURL string
 	http    *http.Client
 	cb      *gobreaker.CircuitBreaker
 }
 
-// NewClient crea un Client puntando a baseURL (es. "http://permission-service:8087").
+// NewClient crea un Client puntando a baseURL (es. "http://forgecore-permissions:8087").
 func NewClient(baseURL string) *Client {
-	transport := common.NewOTELTransport(nil)
+	transport := clienttransport.NewOTELTransport(nil)
 	cb := gobreaker.NewCircuitBreaker(gobreaker.Settings{
-		Name:        "permission-service",
+		Name:        "forgecore-permissions",
 		MaxRequests: 5,
 		Interval:    60 * time.Second,
 		Timeout:     30 * time.Second,
@@ -56,7 +57,7 @@ type CheckResponse struct {
 // Check verifica se un utente può eseguire un'azione su una risorsa.
 func (c *Client) Check(ctx context.Context, token string, req CheckRequest) (bool, error) {
 	var result CheckResponse
-	err := common.RetryFn(ctx, func() error {
+	err := clientretry.RetryFn(ctx, func() error {
 		_, cbErr := c.cb.Execute(func() (any, error) {
 			return nil, c.doCheck(ctx, token, req, &result)
 		})
@@ -78,7 +79,7 @@ func (c *Client) doCheck(ctx context.Context, token string, req CheckRequest, ou
 		return err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
-	common.InjectBearer(ctx, httpReq, token)
+	clienttransport.InjectBearer(ctx, httpReq, token)
 
 	resp, err := c.http.Do(httpReq)
 	if err != nil {
@@ -87,14 +88,14 @@ func (c *Client) doCheck(ctx context.Context, token string, req CheckRequest, ou
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("permission-service risposta %d", resp.StatusCode)
+		return fmt.Errorf("forgecore-permissions risposta %d", resp.StatusCode)
 	}
 	return json.NewDecoder(resp.Body).Decode(out)
 }
 
-// SeedRoles chiama permission-service per creare i ruoli predefiniti per un tenant.
+// SeedRoles chiama forgecore-permissions per creare i ruoli predefiniti per un tenant.
 func (c *Client) SeedRoles(ctx context.Context, token, tenantID string) error {
-	err := common.RetryFn(ctx, func() error {
+	err := clientretry.RetryFn(ctx, func() error {
 		_, cbErr := c.cb.Execute(func() (any, error) {
 			return nil, c.doSeedRoles(ctx, token, tenantID)
 		})
@@ -107,13 +108,16 @@ func (c *Client) SeedRoles(ctx context.Context, token, tenantID string) error {
 }
 
 func (c *Client) doSeedRoles(ctx context.Context, token, tenantID string) error {
-	body, _ := json.Marshal(map[string]string{"tenant_id": tenantID})
+	body, err := json.Marshal(map[string]string{"tenant_id": tenantID})
+	if err != nil {
+		return fmt.Errorf("marshal richiesta seed ruoli: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/v1/permissions/seed-roles", bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	common.InjectBearer(ctx, req, token)
+	clienttransport.InjectBearer(ctx, req, token)
 
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -122,7 +126,7 @@ func (c *Client) doSeedRoles(ctx context.Context, token, tenantID string) error 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("permission-service seed-roles risposta %d", resp.StatusCode)
+		return fmt.Errorf("forgecore-permissions seed-roles risposta %d", resp.StatusCode)
 	}
 	return nil
 }

@@ -1,234 +1,255 @@
-## Context Navigation 
-1. ALWAYS query the knowldege graph first 
+# CLAUDE.md
 
-2. Only read raw files if I explicitly say so 
+## Identita' del progetto
 
+Questo repository contiene `ForgeCore`, una monorepo Go per una SDK backend e un set di microservizi production-ready. Lo scopo e' fornire primitive coerenti, riutilizzabili e pronte all'uso per backend multi-tenant: autenticazione, pagamenti, permessi, configurazioni, audit, notifiche, storage, webhook, job asincroni, osservabilita', validazione, eventi e paginazione.
 
-# CLAUDE.md — Superpowers Microservices Orchestrator
+Root di lavoro:
 
-## Project Goal
-
-Build a production-ready Go 1.26 microservices monorepo called `superpowers`.
-12 services, DDD architecture, Docker Compose deploy, multi-tenant PostgreSQL RLS.
-
-Root: `C:\Users\Andrea\Desktop\golang-modules\`
-
----
-
-## RULES — Read before doing anything
-
-1. NEVER summarize. NEVER explain what you are about to do. Write code immediately.
-2. Read the plans file first. Find the first `[ ]` task. Execute ONLY that task.
-3. After completing a task, mark it `[x]` in the plans file. Then stop.
-4. Each file must compile. No placeholder comments like `// TODO implement`.
-5. All functions must be ≤50 lines. Use guard clauses, not nested if-else.
-6. Always handle errors explicitly. No `_` for errors.
-7. Use named constants, never magic strings or numbers.
-8. Log messages in Italian (matching existing PDLD codebase convention).
-
-Plans file: `C:\Users\Andrea\Desktop\golang-modules\docs\superpowers\plans\2026-03-30-microservices-implementation.md`
-Specs file: `C:\Users\Andrea\Desktop\golang-modules\docs\superpowers\specs\2026-03-30-microservices-design.md`
-Issues file: `C:\Users\Andrea\Desktop\golang-modules\docs\superpowers\issues.md`
-
-> **IMPORTANTE**: Prima di scrivere o modificare qualsiasi file, leggi `issues.md`.
-> Ogni task deve risolvere o non introdurre nuovi problemi elencati lì.
-> Aggiorna `issues.md` marcando come risolti i problemi che correggi.
-
----
-
-## Architecture
-
-```
-transport/ → application/ → domain/
-infrastructure/ → domain/ (implements interfaces)
+```text
+C:\Users\Andrea\Desktop\golang-modules
 ```
 
-- `domain/`         — entities, value objects, repository interfaces. Zero external deps.
-- `application/`    — use cases. Depends only on domain.
-- `infrastructure/` — postgres, redis, external providers.
-- `transport/`      — REST handlers, gRPC, NATS consumers.
+## Regole operative
 
----
+1. Prima di rispondere a domande di architettura o codice, consulta la knowledge graph in `graphify-out/`.
+2. Se esiste `graphify-out/wiki/index.md`, naviga quella wiki prima di leggere file grezzi.
+3. Leggi file grezzi solo quando l'utente lo chiede esplicitamente o quando la wiki/graphify non basta per completare una modifica sicura.
+4. Prima di modificare codice, consulta `docs/forgecore/issues.md`.
+5. Tutti i file di piano devono usare checkbox Markdown per ogni attivita' eseguibile.
+6. Ogni task di piano deve essere spuntato da `[ ]` a `[x]` solo dopo verifica effettiva.
+7. Non considerare completata una fase se i relativi sotto-task non hanno checkbox spuntate.
+8. Dopo ogni modifica rilevante, aggiorna `README.md` e verifica che sia coerente con struttura, naming e stato reale del progetto.
+9. Prima di chiudere un task di codice, verifica che le build funzionino per l'area toccata.
+10. Dopo modifiche a file di codice, aggiorna graphify con:
 
-## Multi-Tenancy Pattern (apply to every table)
+```bash
+python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"
+```
+
+## Architettura obbligatoria
+
+Ogni servizio segue DDD a quattro livelli:
+
+```text
+transport/ -> application/ -> domain/
+infrastructure/ -> domain/
+```
+
+- `domain/`: entita', value object, repository interface, regole pure. Nessuna dipendenza esterna infrastrutturale.
+- `application/`: use case, validazione input, orchestrazione dominio.
+- `infrastructure/`: PostgreSQL, Redis, NATS, provider esterni, implementazioni repository.
+- `transport/`: REST, gRPC, consumer, router, middleware di ingresso.
+
+## Standard Go
+
+- Go target: `1.26`.
+- Ogni funzione deve essere al massimo 50 righe.
+- Preferire guard clause a `if` annidati.
+- Gestire sempre gli errori in modo esplicito.
+- Non usare `_` per ignorare errori.
+- Usare costanti nominate al posto di stringhe e numeri magici.
+- Non lasciare placeholder come `// TODO implement`.
+- Ogni file creato o modificato deve compilare.
+- I log applicativi devono essere in italiano.
+
+## Package condivisi SDK
+
+Costruire e mantenere prima `shared/`, perche' e' la SDK usata dai servizi:
+
+```text
+shared/
+├── proto/
+├── events/
+├── middleware/
+├── validation/
+├── crypto/
+├── pagination/
+├── i18n/
+└── observability/
+```
+
+Responsabilita':
+
+- `proto`: contratti gRPC e messaggi condivisi.
+- `events`: eventi NATS tipizzati e versionati.
+- `middleware`: tenant context, auth check, request-id.
+- `validation`: wrapper e pattern di validazione.
+- `crypto`: helper AES-256 per PII.
+- `pagination`: cursor pagination encode/decode.
+- `i18n`: locale, date e importi.
+- `observability`: slog JSON, Prometheus, graceful shutdown.
+
+## Primo refactor architetturale
+
+Il primo refactor ForgeCore deve introdurre un solo punto di configurazione per tutta la piattaforma.
+
+Regole:
+
+- Esiste un unico servizio/modulo di configurazione: `forgecore-config`.
+- Tutti i servizi leggono configurazioni da `forgecore-config` o dalla SDK condivisa di config, non da logiche duplicate locali.
+- Le configurazioni devono poter arrivare da YAML e variabili ENV.
+- Le variabili ENV hanno precedenza sui valori YAML quando entrambe definiscono la stessa chiave.
+- Ogni configurazione deve avere schema, validazione, default espliciti e messaggi di errore chiari.
+- I segreti non devono essere loggati e devono avere tipi/config wrapper dedicati.
+- Il refactor deve eliminare codice duplicato di config loading, env parsing, default e validazione se gia' presente.
+- I package devono avere naming parlante, con responsabilita' piccola e confini chiari.
+- Evitare package generici come `utils`, `common`, `helpers` quando si puo' usare un nome di dominio tecnico preciso.
+
+Naming consigliato per config:
+
+```text
+shared/configloader
+shared/configschema
+shared/configsource
+services/forgecore-config
+```
+
+Il servizio `forgecore-config` governa configurazioni runtime, tenant-specific e distribuite. I package `shared/config*` forniscono API locali per caricare, validare e comporre YAML/ENV in modo uniforme.
+
+## Aree di miglioramento da presidiare
+
+- La cartella `shared/` deve essere una SDK con API stabili, non una raccolta casuale di utility.
+- Le API della SDK devono essere ergonomiche: nomi chiari, composizione semplice e comportamento prevedibile.
+- I confini dei moduli devono essere verificati da lint, test o regole statiche.
+- Errori, configurazione, osservabilita', paginazione, validazione, tenant context e pubblicazione eventi devono avere pattern comuni.
+- La configurazione deve essere centralizzata in `forgecore-config` e nei package `shared/config*`, eliminando duplicazioni servizio per servizio.
+- Ogni scrittura che produce eventi deve considerare affidabilita', idempotenza e possibilita' di outbox pattern.
+- Proto ed eventi devono essere versionati e compatibili tra release.
+- I client Go interni per gRPC/REST devono essere generati o standardizzati, non riscritti a mano servizio per servizio.
+- Deve esistere un generatore template per nuovi servizi conformi a ForgeCore.
+- Le decisioni architetturali importanti devono vivere in una cartella ADR.
+- Deve esistere una compatibility matrix tra SDK, proto, servizi e schema DB.
+- Ogni servizio deve rispettare una security baseline con threat model minimo.
+- I runbook operativi devono spiegare come debuggare tenant, webhook, job, pagamenti, audit e storage.
+- Lo stack locale deve includere Docker Compose, seed, migrazioni e healthcheck reali.
+- Le release devono seguire changelog, semantic versioning e gestione esplicita delle breaking changes.
+- Migrazioni SQL e policy RLS devono seguire naming e struttura coerenti.
+- I servizi devono avere ownership dati chiara, senza duplicare responsabilita' di dominio.
+- La developer experience deve restare curata con comandi comuni per build, test, lint, migrazioni, proto e scaffolding.
+
+## Multi-tenancy
+
+Ogni tabella applicativa deve avere `tenant_id`, indice dedicato e Row Level Security.
+
+Pattern SQL:
 
 ```sql
 CREATE TABLE <name> (
-    id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
-    ...
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 CREATE INDEX ON <name>(tenant_id);
+
 ALTER TABLE <name> ENABLE ROW LEVEL SECURITY;
+
 CREATE POLICY tenant_isolation ON <name>
     USING (tenant_id = current_setting('app.tenant_id')::uuid);
 ```
 
-Go middleware sets tenant on each DB connection:
+Ogni accesso PostgreSQL tenant-aware deve impostare:
+
 ```go
 conn.Exec(ctx, "SET LOCAL app.tenant_id = $1", tenantID)
 ```
 
----
+## Servizi
 
-## Standard File Templates
+| Servizio | REST | gRPC | Focus |
+| --- | ---: | ---: | --- |
+| `forgecore-gateway` | 8080 | - | proxy, router, middleware |
+| `forgecore-auth` | 8081 | 9091 | utenti, sessioni, JWT RS256 |
+| `forgecore-payments` | 8082 | 9092 | pagamenti, Stripe |
+| `forgecore-notifications` | 8083 | - | notifiche, NATS, SendGrid |
+| `forgecore-admin` | 8084 | - | backoffice, client interni |
+| `forgecore-audit` | 8085 | 9095 | audit append-only, NATS |
+| `forgecore-jobs` | - | - | worker Redis/asynq, scheduler |
+| `forgecore-permissions` | 8087 | 9097 | ruoli, permessi, policy |
+| `forgecore-config` | 8088 | 9098 | configurazioni, Redis cache |
+| `forgecore-webhooks` | 8089 | - | webhook, firme, idempotenza |
+| `forgecore-storage` | 8090 | - | MinIO, metadata PostgreSQL |
+| `forgecore-subscriptions` | 8091 | 9099 | abbonamenti, Stripe |
 
-### go.mod (per service)
+## Naming ForgeCore
+
+Non usare nomi generici come `forgecore-payments`, `forgecore-auth` o `forgecore-gateway` per nuovi moduli, container, metriche o documentazione. Ogni servizio deve usare il prefisso `forgecore-`.
+
+Pattern:
+
+```text
+forgecore-<bounded-context>
 ```
-module github.com/Andrea-Cavallo/golang-modules/services/<service-name>
 
-go 1.26
+Il nome deve essere coerente in cartella servizio, modulo Go, Docker Compose, logger, metriche, healthcheck, documentazione e runbook.
 
-require (
-    github.com/google/uuid v1.6.0
-    github.com/jackc/pgx/v5 v5.7.0
-    github.com/redis/go-redis/v9 v9.7.0
-    go.uber.org/zap v1.27.0
-)
+## Modulo servizio
+
+Ogni servizio deve avere un `go.mod` con modulo:
+
+```text
+github.com/Andrea-Cavallo/golang-modules/services/<forgecore-service-name>
 ```
 
-### main.go skeleton
+## Repository interface
+
+Per entita' persistenti, usare questo pattern nel dominio:
+
 ```go
-package main
-
-import (
-    "context"
-    "log/slog"
-    "os"
-    "os/signal"
-    "syscall"
-)
-
-func main() {
-    ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-    defer cancel()
-
-    if err := run(ctx); err != nil {
-        slog.Error("avvio servizio fallito", "errore", err)
-        os.Exit(1)
-    }
-}
-```
-
-### Repository interface (domain layer)
-```go
-type <Entity>Repository interface {
-    Create(ctx context.Context, e *<Entity>) error
-    GetByID(ctx context.Context, id uuid.UUID) (*<Entity>, error)
-    Update(ctx context.Context, e *<Entity>) error
+type EntityRepository interface {
+    Create(ctx context.Context, entity *Entity) error
+    GetByID(ctx context.Context, id uuid.UUID) (*Entity, error)
+    Update(ctx context.Context, entity *Entity) error
     Delete(ctx context.Context, id uuid.UUID) error
-    ListByTenant(ctx context.Context, tenantID uuid.UUID, cursor pagination.Cursor) ([]*<Entity>, error)
+    ListByTenant(ctx context.Context, tenantID uuid.UUID, cursor pagination.Cursor) ([]*Entity, error)
 }
 ```
 
-### Use case pattern
-```go
-type <Action>UseCase struct {
-    repo   domain.<Entity>Repository
-    events events.Publisher
-}
+## Eventi
 
-func (uc *<Action>UseCase) Execute(ctx context.Context, input <Action>Input) (*<Action>Output, error) {
-    if err := input.Validate(); err != nil {
-        return nil, fmt.Errorf("input non valido: %w", err)
-    }
-    // business logic here
-}
-```
+Ogni evento condiviso deve avere:
 
----
+- nome costante
+- versione
+- `tenant_id`
+- `correlation_id` o `request_id`
+- timestamp
+- payload tipizzato
 
-## Services Summary
+Evitare `map[string]any` quando il contratto e' noto.
 
-| Service             | Port REST | Port gRPC | Key dependencies         |
-|---------------------|-----------|-----------|--------------------------|
-| api-gateway         | 8080      | -         | Traefik, auth gRPC       |
-| auth-service        | 8081      | 9091      | postgres, redis, JWT RS256 |
-| payment-service     | 8082      | 9092      | postgres, stripe         |
-| notification-service| 8083      | -         | postgres, NATS, sendgrid |
-| admin-service       | 8084      | -         | auth+payment gRPC clients|
-| audit-service       | 8085      | 9095      | postgres (append-only), NATS |
-| job-service         | -         | -         | redis (asynq), NATS      |
-| permission-service  | 8087      | 9097      | postgres                 |
-| config-service      | 8088      | 9098      | postgres, redis          |
-| webhook-service     | 8089      | -         | postgres, NATS           |
-| storage-service     | 8090      | -         | minio, postgres          |
-| subscription-service| 8091      | 9099      | postgres, stripe         |
+## Definition of Done
 
----
+Un task e' completato solo quando:
 
-## Sub-Agent Instructions
+- `go build ./...` passa per il codice toccato.
+- Non ci sono placeholder.
+- Il dominio espone le interfacce necessarie.
+- Gli use case sono cablati alle interfacce.
+- `go.mod` e `Dockerfile` sono presenti nei servizi creati.
+- `README.md` e' coerente con naming, struttura e comandi reali.
+- `docs/forgecore/issues.md` non segnala problemi introdotti.
+- I problemi corretti vengono marcati come risolti in `issues.md`.
 
-When the orchestrator (primary Build agent) assigns a task, spawn one sub-agent per service using the Task tool. Each sub-agent must:
+## Ordine di lavoro consigliato
 
-1. Read this CLAUDE.md file first.
-2. Read only the section of the specs relevant to its assigned service.
-3. Build ONLY the files for its assigned service — never touch other services.
-4. Follow the DDD 4-layer structure exactly.
-5. Report back: list of files created, nothing else.
+1. Consultare graphify.
+2. Consultare `docs/forgecore/issues.md` prima di cambiare codice.
+3. Usare come piano canonico `docs/forgecore/plans/2026-05-01-forgecore-refactor-roadmap.md`.
+4. Verificare che il piano usi checkbox per ogni task e sotto-task.
+5. Completare il primo task aperto del piano canonico.
+6. Prima di creare file nuovi, verificare se esiste gia' una base da rifattorizzare.
+7. Costruire prima `shared/` e `forgecore-config`, poi lavorare sui servizi.
+8. Verificare build e assenza di placeholder.
+9. Spuntare nel piano solo cio' che e' stato completato e verificato.
+10. Aggiornare `README.md` se naming, struttura, comandi, servizi o stato del progetto sono cambiati.
+11. Aggiornare graphify dopo modifiche a codice.
 
-### How to spawn parallel agents (primary agent prompt)
+## File di riferimento
 
-```
-Spawn one sub-agent per service in parallel using the Task tool.
-Assign each agent exactly one service from the list below.
-Each agent must read CLAUDE.md, then build the complete DDD skeleton for its service.
-Wait for all agents to complete, then update the plans file marking the task as done.
-
-Services to assign:
-- @general → auth-service: build domain/, application/ skeleton, go.mod, Dockerfile
-- @general → payment-service: build domain/, application/ skeleton, go.mod, Dockerfile
-- @general → notification-service: build domain/, application/ skeleton, go.mod, Dockerfile
-- @general → permission-service: build domain/, application/ skeleton, go.mod, Dockerfile
-- @general → config-service: build domain/, application/ skeleton, go.mod, Dockerfile
-- @general → audit-service: build domain/, application/ skeleton, go.mod, Dockerfile
-- @general → webhook-service: build domain/, application/ skeleton, go.mod, Dockerfile
-- @general → storage-service: build domain/, application/ skeleton, go.mod, Dockerfile
-- @general → subscription-service: build domain/, application/ skeleton, go.mod, Dockerfile
-- @general → job-service: build jobs/, scheduler/ skeleton, go.mod, Dockerfile
-- @general → admin-service: build application/, transport/ skeleton, go.mod, Dockerfile
-- @general → api-gateway: build proxy/, middleware/, router/ skeleton, go.mod, Dockerfile
-```
-
----
-
-## Shared Packages to build first (Phase 0)
-
-Before spawning service agents, build these shared packages:
-
-```
-shared/
-├── proto/          — .proto files for all 10 services
-├── events/         — NATS typed event structs
-├── middleware/      — tenant context, auth check, request-id
-├── validation/     — go-playground/validator wrappers
-├── crypto/         — AES-256 PII encryption helpers
-├── pagination/     — cursor-based pagination (Encode/Decode)
-├── i18n/           — locale helpers, format amount/date
-└── observability/  — slog JSON, Prometheus, graceful shutdown
-```
-
-Build shared packages sequentially (they are dependencies of all services).
-Build services in parallel after shared/ is complete.
-
----
-
-## Definition of Done (per task)
-
-A task is `[x]` only when:
-- [ ] All files compile (`go build ./...` passes)
-- [ ] No `// TODO` placeholders remain
-- [ ] Repository interface exists in domain/
-- [ ] Use cases are wired to the interface
-- [ ] go.mod is present and valid
-- [ ] Dockerfile is present
-
-## graphify
-
-This project has a graphify knowledge graph at graphify-out/.
-
-Rules:
-- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
-- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
-- After modifying code files in this session, run `python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"` to keep the graph current
+- Studio progetto ForgeCore: `docs/forgecore/studio-approfondito-sdk-backend.md`
+- Piano canonico refactor ForgeCore: `docs/forgecore/plans/2026-05-01-forgecore-refactor-roadmap.md`
+- Piano microservizi: `docs/forgecore/plans/2026-03-30-microservices-implementation.md`
+- Specifiche microservizi: `docs/forgecore/specs/2026-03-30-microservices-design.md`
+- Registro problemi: `docs/forgecore/issues.md`

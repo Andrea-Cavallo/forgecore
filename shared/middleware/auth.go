@@ -8,6 +8,8 @@ import (
 
 type claimsKey struct{}
 
+const HeaderAuthorization = "Authorization"
+
 // Claims holds the decoded JWT claims stored in the request context.
 type Claims struct {
 	UserID   string
@@ -21,7 +23,7 @@ func ClaimsFromContext(ctx context.Context) (*Claims, bool) {
 	return v, ok
 }
 
-// TokenVerifier is implemented by the auth-service gRPC client.
+// TokenVerifier is implemented by the forgecore-auth gRPC client.
 type TokenVerifier interface {
 	VerifyToken(ctx context.Context, token string) (*Claims, error)
 }
@@ -31,7 +33,7 @@ type TokenVerifier interface {
 func AuthMiddleware(verifier TokenVerifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authHeader := r.Header.Get("Authorization")
+			authHeader := r.Header.Get(HeaderAuthorization)
 			if !strings.HasPrefix(authHeader, "Bearer ") {
 				http.Error(w, "token di autenticazione mancante", http.StatusUnauthorized)
 				return

@@ -1,6 +1,6 @@
 # Microservizi Go 1.24 — Piano di Implementazione
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use forgecore:subagent-driven-development (recommended) or forgecore:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Costruire un backend SaaS enterprise-grade in Go 1.24 composto da 10 microservizi riusabili, production-ready, con auth, pagamenti, notifiche, permessi, subscription e storage.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** Go 1.24, PostgreSQL 16, Redis 7 (Sentinel), NATS JetStream, HashiCorp Vault, Traefik v3, Docker Compose, OpenTelemetry, Prometheus/Grafana, Jaeger
 
-**Spec di riferimento:** `docs/superpowers/specs/2026-03-30-microservices-design.md`
+**Spec di riferimento:** `docs/forgecore/specs/2026-03-30-microservices-design.md`
 
 ---
 
@@ -35,26 +35,26 @@
 ## Task 0.1: Struttura repository
 
 **Files:**
-- Create: `services/auth-service/go.mod`
-- Create: `services/payment-service/go.mod`
-- Create: `services/notification-service/go.mod`
-- Create: `services/admin-service/go.mod`
-- Create: `services/audit-service/go.mod`
-- Create: `services/job-service/go.mod`
-- Create: `services/api-gateway/go.mod`
-- Create: `services/permission-service/go.mod`
-- Create: `services/config-service/go.mod`
-- Create: `services/webhook-service/go.mod`
-- Create: `services/storage-service/go.mod`
-- Create: `services/subscription-service/go.mod`
+- Create: `services/forgecore-auth/go.mod`
+- Create: `services/forgecore-payments/go.mod`
+- Create: `services/forgecore-notifications/go.mod`
+- Create: `services/forgecore-admin/go.mod`
+- Create: `services/forgecore-audit/go.mod`
+- Create: `services/forgecore-jobs/go.mod`
+- Create: `services/forgecore-gateway/go.mod`
+- Create: `services/forgecore-permissions/go.mod`
+- Create: `services/forgecore-config/go.mod`
+- Create: `services/forgecore-webhooks/go.mod`
+- Create: `services/forgecore-storage/go.mod`
+- Create: `services/forgecore-subscriptions/go.mod`
 - Create: `shared/go.mod`
 - Create: `sdk/go/go.mod`
 
 - [x] **Step 1: Crea le directory dei servizi**
 
 ```bash
-mkdir -p services/{auth-service,payment-service,notification-service,admin-service,audit-service,job-service,api-gateway,permission-service,config-service,webhook-service,storage-service,subscription-service}/cmd/server
-mkdir -p services/job-service/cmd/worker
+mkdir -p services/{forgecore-auth,forgecore-payments,forgecore-notifications,forgecore-admin,forgecore-audit,forgecore-jobs,forgecore-gateway,forgecore-permissions,forgecore-config,forgecore-webhooks,forgecore-storage,forgecore-subscriptions}/cmd/server
+mkdir -p services/forgecore-jobs/cmd/worker
 mkdir -p shared/{proto,events,middleware,validation,crypto,pagination,i18n,observability}
 mkdir -p sdk/go/{auth,payment,permission,config,common}
 mkdir -p deployments/{traefik,vault,pgbouncer,prometheus,alertmanager,grafana/provisioning,nats}
@@ -70,7 +70,7 @@ cd shared && go mod init github.com/yourorg/golang-modules/shared && cd ..
 - [x] **Step 3: Inizializza go.mod per ogni servizio (script)**
 
 ```bash
-for svc in auth-service payment-service notification-service admin-service audit-service job-service api-gateway permission-service config-service webhook-service storage-service subscription-service; do
+for svc in forgecore-auth forgecore-payments forgecore-notifications forgecore-admin forgecore-audit forgecore-jobs forgecore-gateway forgecore-permissions forgecore-config forgecore-webhooks forgecore-storage forgecore-subscriptions; do
   cd services/$svc
   go mod init github.com/yourorg/golang-modules/services/$svc
   cd ../..
@@ -935,22 +935,22 @@ services:
       - letsencrypt:/letsencrypt
 
   # --- Application Services ---
-  api-gateway:
+  forgecore-gateway:
     <<: *service-defaults
-    build: ../services/api-gateway
+    build: ../services/forgecore-gateway
     environment:
       - PORT=8080
-      - AUTH_GRPC_ADDR=auth-service:9091
+      - AUTH_GRPC_ADDR=forgecore-auth:9091
       - ENV=production
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gateway.rule=Host(`api.yourdomain.com`)"
       - "traefik.http.routers.gateway.tls.certresolver=letsencrypt"
-    depends_on: [auth-service, payment-service]
+    depends_on: [forgecore-auth, forgecore-payments]
 
-  auth-service:
+  forgecore-auth:
     <<: *service-defaults
-    build: ../services/auth-service
+    build: ../services/forgecore-auth
     environment:
       - PORT=8081
       - GRPC_PORT=9091
@@ -962,23 +962,23 @@ services:
       - ENV=production
     depends_on: [postgres-auth, redis-master, vault, nats-1]
 
-  payment-service:
+  forgecore-payments:
     <<: *service-defaults
-    build: ../services/payment-service
+    build: ../services/forgecore-payments
     environment:
       - PORT=8082
       - GRPC_PORT=9092
       - DATABASE_URL=postgres://payment:${PAYMENT_DB_PASS}@pgbouncer:5432/payment_db?sslmode=disable
-      - AUTH_GRPC_ADDR=auth-service:9091
+      - AUTH_GRPC_ADDR=forgecore-auth:9091
       - NATS_URL=nats://nats-1:4222,nats://nats-2:4222,nats://nats-3:4222
       - VAULT_ADDR=http://vault:8200
       - VAULT_TOKEN=${VAULT_TOKEN}
       - ENV=production
-    depends_on: [postgres-payments, auth-service, vault, nats-1]
+    depends_on: [postgres-payments, forgecore-auth, vault, nats-1]
 
-  notification-service:
+  forgecore-notifications:
     <<: *service-defaults
-    build: ../services/notification-service
+    build: ../services/forgecore-notifications
     environment:
       - DATABASE_URL=postgres://notif:${NOTIF_DB_PASS}@pgbouncer:5432/notification_db?sslmode=disable
       - NATS_URL=nats://nats-1:4222,nats://nats-2:4222,nats://nats-3:4222
@@ -987,21 +987,21 @@ services:
       - ENV=production
     depends_on: [postgres-notifications, nats-1, vault]
 
-  admin-service:
+  forgecore-admin:
     <<: *service-defaults
-    build: ../services/admin-service
+    build: ../services/forgecore-admin
     environment:
       - PORT=8084
       - GRPC_PORT=9094
-      - AUTH_GRPC_ADDR=auth-service:9091
-      - PAYMENT_GRPC_ADDR=payment-service:9092
-      - AUDIT_GRPC_ADDR=audit-service:9095
+      - AUTH_GRPC_ADDR=forgecore-auth:9091
+      - PAYMENT_GRPC_ADDR=forgecore-payments:9092
+      - AUDIT_GRPC_ADDR=forgecore-audit:9095
       - ENV=production
-    depends_on: [auth-service, payment-service, audit-service]
+    depends_on: [forgecore-auth, forgecore-payments, forgecore-audit]
 
-  audit-service:
+  forgecore-audit:
     <<: *service-defaults
-    build: ../services/audit-service
+    build: ../services/forgecore-audit
     environment:
       - PORT=8085
       - GRPC_PORT=9095
@@ -1010,18 +1010,18 @@ services:
       - ENV=production
     depends_on: [postgres-audit, nats-1]
 
-  job-service:
+  forgecore-jobs:
     <<: *service-defaults
-    build: ../services/job-service
+    build: ../services/forgecore-jobs
     environment:
       - REDIS_URL=redis-sentinel:26379
       - NATS_URL=nats://nats-1:4222,nats://nats-2:4222,nats://nats-3:4222
       - ENV=production
     depends_on: [redis-master, nats-1]
 
-  permission-service:
+  forgecore-permissions:
     <<: *service-defaults
-    build: ../services/permission-service
+    build: ../services/forgecore-permissions
     environment:
       - PORT=8086
       - GRPC_PORT=9096
@@ -1030,9 +1030,9 @@ services:
       - ENV=production
     depends_on: [postgres-permissions, redis-master]
 
-  config-service:
+  forgecore-config:
     <<: *service-defaults
-    build: ../services/config-service
+    build: ../services/forgecore-config
     environment:
       - PORT=8087
       - GRPC_PORT=9097
@@ -1042,9 +1042,9 @@ services:
       - ENV=production
     depends_on: [postgres-config, redis-master, nats-1]
 
-  webhook-service:
+  forgecore-webhooks:
     <<: *service-defaults
-    build: ../services/webhook-service
+    build: ../services/forgecore-webhooks
     environment:
       - PORT=8088
       - DATABASE_URL=postgres://webhook:${WEBHOOK_DB_PASS}@pgbouncer:5432/webhook_db?sslmode=disable
@@ -1052,9 +1052,9 @@ services:
       - ENV=production
     depends_on: [postgres-webhooks, nats-1]
 
-  storage-service:
+  forgecore-storage:
     <<: *service-defaults
-    build: ../services/storage-service
+    build: ../services/forgecore-storage
     environment:
       - PORT=8089
       - DATABASE_URL=postgres://storage:${STORAGE_DB_PASS}@pgbouncer:5432/storage_db?sslmode=disable
@@ -1064,19 +1064,19 @@ services:
       - ENV=production
     depends_on: [postgres-storage, minio, vault]
 
-  subscription-service:
+  forgecore-subscriptions:
     <<: *service-defaults
-    build: ../services/subscription-service
+    build: ../services/forgecore-subscriptions
     environment:
       - PORT=8090
       - GRPC_PORT=9090
       - DATABASE_URL=postgres://subs:${SUBS_DB_PASS}@pgbouncer:5432/subscription_db?sslmode=disable
       - NATS_URL=nats://nats-1:4222,nats://nats-2:4222,nats://nats-3:4222
-      - AUTH_GRPC_ADDR=auth-service:9091
+      - AUTH_GRPC_ADDR=forgecore-auth:9091
       - VAULT_ADDR=http://vault:8200
       - VAULT_TOKEN=${VAULT_TOKEN}
       - ENV=production
-    depends_on: [postgres-subscriptions, auth-service, nats-1, vault]
+    depends_on: [postgres-subscriptions, forgecore-auth, nats-1, vault]
 
   # --- Databases (one per service) ---
   postgres-auth:
@@ -1361,13 +1361,13 @@ git commit -m "feat(infra): add full Docker Compose with 10 DBs, Redis Sentinel,
 ## Task 0.8: Dockerfile base (pattern condiviso)
 
 **Files:**
-- Create: `services/auth-service/Dockerfile`
+- Create: `services/forgecore-auth/Dockerfile`
   (stesso pattern per tutti gli altri servizi)
 
 - [x] **Step 1: Crea Dockerfile multi-stage**
 
 ```dockerfile
-# services/auth-service/Dockerfile
+# services/forgecore-auth/Dockerfile
 # Stage 1: Build
 FROM golang:1.24-alpine AS builder
 WORKDIR /app
@@ -1390,8 +1390,8 @@ ENTRYPOINT ["/server"]
 - [x] **Step 2: Replica il Dockerfile per tutti i servizi**
 
 ```bash
-for svc in payment-service notification-service admin-service audit-service api-gateway permission-service config-service webhook-service storage-service subscription-service; do
-  cp services/auth-service/Dockerfile services/$svc/Dockerfile
+for svc in forgecore-payments forgecore-notifications forgecore-admin forgecore-audit forgecore-gateway forgecore-permissions forgecore-config forgecore-webhooks forgecore-storage forgecore-subscriptions; do
+  cp services/forgecore-auth/Dockerfile services/$svc/Dockerfile
   # Aggiorna EXPOSE in ogni file con le porte corrette
 done
 ```
@@ -1402,14 +1402,14 @@ done
 cat > scripts/migrate.sh << 'EOF'
 #!/bin/bash
 # Usage: ./scripts/migrate.sh <service> <direction>
-# Example: ./scripts/migrate.sh auth-service up
+# Example: ./scripts/migrate.sh forgecore-auth up
 
 SERVICE=$1
 DIRECTION=${2:-up}
 
 case $SERVICE in
-  auth-service)     DB_URL=$AUTH_DATABASE_URL ;;
-  payment-service)  DB_URL=$PAYMENT_DATABASE_URL ;;
+  forgecore-auth)     DB_URL=$AUTH_DATABASE_URL ;;
+  forgecore-payments)  DB_URL=$PAYMENT_DATABASE_URL ;;
   *)                echo "Unknown service: $SERVICE"; exit 1 ;;
 esac
 
@@ -1552,16 +1552,16 @@ git commit -m "feat(infra): add Vault init script (JWT keys, PII key, external s
 ## Task 1.1: Auth Service — domain layer
 
 **Files:**
-- Create: `services/auth-service/internal/domain/user.go`
-- Create: `services/auth-service/internal/domain/token.go`
-- Create: `services/auth-service/internal/domain/repository.go`
-- Create: `services/auth-service/internal/domain/errors.go`
-- Test: `services/auth-service/internal/domain/user_test.go`
+- Create: `services/forgecore-auth/internal/domain/user.go`
+- Create: `services/forgecore-auth/internal/domain/token.go`
+- Create: `services/forgecore-auth/internal/domain/repository.go`
+- Create: `services/forgecore-auth/internal/domain/errors.go`
+- Test: `services/forgecore-auth/internal/domain/user_test.go`
 
-- [x] **Step 1: Aggiungi dipendenze auth-service**
+- [x] **Step 1: Aggiungi dipendenze forgecore-auth**
 
 ```bash
-cd services/auth-service
+cd services/forgecore-auth
 go get github.com/google/uuid@latest
 go get github.com/golang-jwt/jwt/v5@latest
 go get golang.org/x/crypto@latest
@@ -1576,12 +1576,12 @@ go get github.com/hashicorp/vault/api/v2@latest
 - [x] **Step 2: Scrivi test per il dominio**
 
 ```go
-// services/auth-service/internal/domain/user_test.go
+// services/forgecore-auth/internal/domain/user_test.go
 package domain_test
 
 import (
     "testing"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/domain"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
 )
 
 func TestNewUser_Valid(t *testing.T) {
@@ -1604,14 +1604,14 @@ func TestUser_HasRole(t *testing.T) {
 - [x] **Step 3: Run test — deve fallire**
 
 ```bash
-cd services/auth-service && go test ./internal/domain/... -v
+cd services/forgecore-auth && go test ./internal/domain/... -v
 # Expected: FAIL
 ```
 
 - [x] **Step 4: Implementa user.go**
 
 ```go
-// services/auth-service/internal/domain/user.go
+// services/forgecore-auth/internal/domain/user.go
 package domain
 
 import (
@@ -1668,7 +1668,7 @@ func (u *User) IsLocked() bool {
 - [x] **Step 5: Implementa token.go e errors.go**
 
 ```go
-// services/auth-service/internal/domain/token.go
+// services/forgecore-auth/internal/domain/token.go
 package domain
 
 import "time"
@@ -1689,7 +1689,7 @@ type TokenClaims struct {
 ```
 
 ```go
-// services/auth-service/internal/domain/errors.go
+// services/forgecore-auth/internal/domain/errors.go
 package domain
 
 import "errors"
@@ -1711,7 +1711,7 @@ var (
 - [x] **Step 6: Implementa repository.go (interfacce)**
 
 ```go
-// services/auth-service/internal/domain/repository.go
+// services/forgecore-auth/internal/domain/repository.go
 package domain
 
 import (
@@ -1756,7 +1756,7 @@ go test ./internal/domain/... -v
 - [x] **Step 8: Commit**
 
 ```bash
-git add services/auth-service/internal/domain/
+git add services/forgecore-auth/internal/domain/
 git commit -m "feat(auth): add domain layer — User entity, TokenPair, repository interfaces, error types"
 ```
 
@@ -1765,13 +1765,13 @@ git commit -m "feat(auth): add domain layer — User entity, TokenPair, reposito
 ## Task 1.2: Auth Service — RegisterUseCase con TDD
 
 **Files:**
-- Create: `services/auth-service/internal/application/register.go`
-- Test: `services/auth-service/internal/application/register_test.go`
+- Create: `services/forgecore-auth/internal/application/register.go`
+- Test: `services/forgecore-auth/internal/application/register_test.go`
 
 - [x] **Step 1: Scrivi test con mock del repository**
 
 ```bash
-cd services/auth-service
+cd services/forgecore-auth
 go get github.com/stretchr/testify@latest
 # Installa mockery per generare mock
 go install github.com/vektra/mockery/v2@latest
@@ -1780,7 +1780,7 @@ mockery --name=TokenStore --dir=internal/domain --output=internal/mocks --outpkg
 ```
 
 ```go
-// services/auth-service/internal/application/register_test.go
+// services/forgecore-auth/internal/application/register_test.go
 package application_test
 
 import (
@@ -1789,9 +1789,9 @@ import (
     "github.com/google/uuid"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/mock"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/application"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/domain"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/mocks"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/application"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/mocks"
 )
 
 func TestRegister_Success(t *testing.T) {
@@ -1853,7 +1853,7 @@ go test ./internal/application/... -run TestRegister -v
 - [x] **Step 3: Implementa register.go**
 
 ```go
-// services/auth-service/internal/application/register.go
+// services/forgecore-auth/internal/application/register.go
 package application
 
 import (
@@ -1861,7 +1861,7 @@ import (
     "fmt"
     "github.com/google/uuid"
     "golang.org/x/crypto/bcrypt"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/domain"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
     "github.com/yourorg/golang-modules/shared/events"
 )
 
@@ -1945,7 +1945,7 @@ go test ./internal/application/... -run TestRegister -v
 - [x] **Step 5: Commit**
 
 ```bash
-git add services/auth-service/internal/application/ services/auth-service/internal/mocks/
+git add services/forgecore-auth/internal/application/ services/forgecore-auth/internal/mocks/
 git commit -m "feat(auth): add RegisterUseCase with email uniqueness check, bcrypt, PII encryption, event publishing"
 ```
 
@@ -1954,14 +1954,14 @@ git commit -m "feat(auth): add RegisterUseCase with email uniqueness check, bcry
 ## Task 1.3: Auth Service — LoginUseCase + JWT
 
 **Files:**
-- Create: `services/auth-service/internal/application/login.go`
-- Create: `services/auth-service/internal/application/jwt.go`
-- Test: `services/auth-service/internal/application/login_test.go`
+- Create: `services/forgecore-auth/internal/application/login.go`
+- Create: `services/forgecore-auth/internal/application/jwt.go`
+- Test: `services/forgecore-auth/internal/application/login_test.go`
 
 - [x] **Step 1: Scrivi test per login**
 
 ```go
-// services/auth-service/internal/application/login_test.go
+// services/forgecore-auth/internal/application/login_test.go
 package application_test
 
 import (
@@ -1972,9 +1972,9 @@ import (
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/mock"
     "golang.org/x/crypto/bcrypt"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/application"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/domain"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/mocks"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/application"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/mocks"
 )
 
 func TestLogin_Success(t *testing.T) {
@@ -2036,7 +2036,7 @@ func TestLogin_InvalidPassword(t *testing.T) {
 - [x] **Step 2: Implementa jwt.go**
 
 ```go
-// services/auth-service/internal/application/jwt.go
+// services/forgecore-auth/internal/application/jwt.go
 package application
 
 import (
@@ -2044,7 +2044,7 @@ import (
     "time"
     "github.com/golang-jwt/jwt/v5"
     "github.com/google/uuid"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/domain"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
 )
 
 type JWTService struct{ secret []byte }
@@ -2101,7 +2101,7 @@ func (s *JWTService) Validate(tokenStr string) (*domain.TokenClaims, string, err
 - [x] **Step 3: Implementa login.go**
 
 ```go
-// services/auth-service/internal/application/login.go
+// services/forgecore-auth/internal/application/login.go
 package application
 
 import (
@@ -2110,7 +2110,7 @@ import (
     "time"
     "github.com/google/uuid"
     "golang.org/x/crypto/bcrypt"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/domain"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
     "github.com/yourorg/golang-modules/shared/events"
 )
 
@@ -2201,7 +2201,7 @@ go test ./internal/application/... -run TestLogin -v
 - [x] **Step 5: Commit**
 
 ```bash
-git add services/auth-service/internal/application/
+git add services/forgecore-auth/internal/application/
 git commit -m "feat(auth): add LoginUseCase with brute force protection, bcrypt verify, JWT issuance, MFA gate"
 ```
 
@@ -2210,16 +2210,16 @@ git commit -m "feat(auth): add LoginUseCase with brute force protection, bcrypt 
 ## Task 1.4: Auth Service — infrastructure (PostgreSQL + Redis)
 
 **Files:**
-- Create: `services/auth-service/internal/infrastructure/postgres/user_repo.go`
-- Create: `services/auth-service/internal/infrastructure/redis/token_store.go`
-- Create: `services/auth-service/migrations/000001_create_users.up.sql`
-- Create: `services/auth-service/migrations/000001_create_users.down.sql`
-- Test: `services/auth-service/internal/infrastructure/postgres/user_repo_integration_test.go`
+- Create: `services/forgecore-auth/internal/infrastructure/postgres/user_repo.go`
+- Create: `services/forgecore-auth/internal/infrastructure/redis/token_store.go`
+- Create: `services/forgecore-auth/migrations/000001_create_users.up.sql`
+- Create: `services/forgecore-auth/migrations/000001_create_users.down.sql`
+- Test: `services/forgecore-auth/internal/infrastructure/postgres/user_repo_integration_test.go`
 
 - [x] **Step 1: Crea migration SQL**
 
 ```sql
--- services/auth-service/migrations/000001_create_users.up.sql
+-- services/forgecore-auth/migrations/000001_create_users.up.sql
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE users (
@@ -2263,7 +2263,7 @@ CREATE POLICY tenant_isolation ON sessions
 ```
 
 ```sql
--- services/auth-service/migrations/000001_create_users.down.sql
+-- services/forgecore-auth/migrations/000001_create_users.down.sql
 DROP TABLE IF EXISTS sessions;
 DROP TABLE IF EXISTS users;
 ```
@@ -2276,7 +2276,7 @@ go get github.com/golang-migrate/migrate/v4@latest
 ```
 
 ```go
-// services/auth-service/internal/infrastructure/postgres/user_repo_integration_test.go
+// services/forgecore-auth/internal/infrastructure/postgres/user_repo_integration_test.go
 //go:build integration
 
 package postgres_test
@@ -2287,8 +2287,8 @@ import (
     "github.com/google/uuid"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/domain"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/infrastructure/postgres"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/infrastructure/postgres"
     // testcontainers setup helper (vedi Task 1.4 Step 3)
 )
 
@@ -2335,7 +2335,7 @@ func TestUserRepo_RLS_Isolation(t *testing.T) {
 - [x] **Step 3: Implementa user_repo.go**
 
 ```go
-// services/auth-service/internal/infrastructure/postgres/user_repo.go
+// services/forgecore-auth/internal/infrastructure/postgres/user_repo.go
 package postgres
 
 import (
@@ -2345,7 +2345,7 @@ import (
     "github.com/google/uuid"
     "github.com/jackc/pgx/v5"
     "github.com/jackc/pgx/v5/pgxpool"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/domain"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
 )
 
 type UserRepository struct{ db *pgxpool.Pool }
@@ -2446,7 +2446,7 @@ go test -tags=integration ./internal/infrastructure/postgres/... -v
 - [x] **Step 5: Commit**
 
 ```bash
-git add services/auth-service/internal/infrastructure/ services/auth-service/migrations/
+git add services/forgecore-auth/internal/infrastructure/ services/forgecore-auth/migrations/
 git commit -m "feat(auth): add PostgreSQL user repository with RLS, migrations, integration tests"
 ```
 
@@ -2455,15 +2455,15 @@ git commit -m "feat(auth): add PostgreSQL user repository with RLS, migrations, 
 ## Task 1.5: Auth Service — HTTP transport layer
 
 **Files:**
-- Create: `services/auth-service/internal/transport/rest/handler.go`
-- Create: `services/auth-service/internal/transport/rest/routes.go`
-- Create: `services/auth-service/cmd/server/main.go`
-- Test: `services/auth-service/internal/transport/rest/handler_test.go`
+- Create: `services/forgecore-auth/internal/transport/rest/handler.go`
+- Create: `services/forgecore-auth/internal/transport/rest/routes.go`
+- Create: `services/forgecore-auth/cmd/server/main.go`
+- Test: `services/forgecore-auth/internal/transport/rest/handler_test.go`
 
 - [x] **Step 1: Scrivi test per l'handler**
 
 ```go
-// services/auth-service/internal/transport/rest/handler_test.go
+// services/forgecore-auth/internal/transport/rest/handler_test.go
 package rest_test
 
 import (
@@ -2473,7 +2473,7 @@ import (
     "net/http/httptest"
     "testing"
     "github.com/stretchr/testify/assert"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/transport/rest"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/transport/rest"
 )
 
 func TestRegisterHandler_InvalidJSON(t *testing.T) {
@@ -2504,14 +2504,14 @@ func (m *mockLoginUC) Execute(_ interface{}, _ interface{}) (interface{}, error)
 - [x] **Step 2: Implementa handler.go**
 
 ```go
-// services/auth-service/internal/transport/rest/handler.go
+// services/forgecore-auth/internal/transport/rest/handler.go
 package rest
 
 import (
     "context"
     "encoding/json"
     "net/http"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/application"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/application"
     "github.com/yourorg/golang-modules/shared/validation"
 )
 
@@ -2615,7 +2615,7 @@ func writeBusinessError(w http.ResponseWriter, err error) {
 - [x] **Step 3: Implementa main.go**
 
 ```go
-// services/auth-service/cmd/server/main.go
+// services/forgecore-auth/cmd/server/main.go
 package main
 
 import (
@@ -2624,12 +2624,12 @@ import (
     "log/slog"
     "net/http"
     "os"
-    "github.com/yourorg/golang-modules/services/auth-service/internal/transport/rest"
+    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/transport/rest"
     "github.com/yourorg/golang-modules/shared/observability"
 )
 
 func main() {
-    logger := observability.NewLogger("auth-service", "1.0.0", getEnv("ENV", "development"), nil)
+    logger := observability.NewLogger("forgecore-auth", "1.0.0", getEnv("ENV", "development"), nil)
     slog.SetDefault(logger)
 
     port := getEnv("PORT", "8081")
@@ -2640,7 +2640,7 @@ func main() {
         Handler: h,
     }
 
-    logger.Info("auth-service starting", "port", port)
+    logger.Info("forgecore-auth starting", "port", port)
     go func() {
         if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
             logger.Error("server error", "error", err)
@@ -2674,7 +2674,7 @@ func getEnv(key, fallback string) string {
 - [x] **Step 4: Build e verifica**
 
 ```bash
-cd services/auth-service && go build ./cmd/server/
+cd services/forgecore-auth && go build ./cmd/server/
 # Expected: no errors, binary created
 ```
 
@@ -2688,7 +2688,7 @@ go test ./internal/transport/rest/... -v
 - [x] **Step 6: Commit**
 
 ```bash
-git add services/auth-service/internal/transport/ services/auth-service/cmd/
+git add services/forgecore-auth/internal/transport/ services/forgecore-auth/cmd/
 git commit -m "feat(auth): add REST transport layer — register/login handlers, error mapping, health endpoint, main server"
 ```
 
@@ -2701,9 +2701,9 @@ git commit -m "feat(auth): add REST transport layer — register/login handlers,
 > Stato attuale:
 > - Fase 0 completa (infra, Docker, Vault, NATS, Dockerfiles, migration script)
 > - Fase 1 completa ECCETTO Task 1.4 Step 2 (integration test con testcontainers)
-> - auth-service: dominio ✅, application ✅ (con jwt.go), infra ✅, transport ✅, migration SQL ✅
+> - forgecore-auth: dominio ✅, application ✅ (con jwt.go), infra ✅, transport ✅, migration SQL ✅
 > - Test scritti: domain/user_test.go, application/register_test.go, application/login_test.go
-> - Copertura ancora bassa (solo auth-service); gli altri servizi non hanno test
+> - Copertura ancora bassa (solo forgecore-auth); gli altri servizi non hanno test
 > - Issues.md: tutti i problemi CRITICAL/HIGH/MEDIUM risolti, solo M-10 (test coverage) aperto
 >
 > **Primo task da eseguire:** Task 1.4 Step 2 — integration test con testcontainers per user_repository.
@@ -2758,7 +2758,7 @@ Aggiunto `google.golang.org/grpc v1.70.0` in go.mod. Eseguire `go mod tidy` prim
 # FASE 3 — API Gateway
 
 ## Task 3.1: Reverse proxy base + routing ✅
-**Files:** `services/api-gateway/internal/proxy/proxy.go`, `internal/router/routes.go`
+**Files:** `services/forgecore-gateway/internal/proxy/proxy.go`, `internal/router/routes.go`
 _Completato 2026-04-13: ReverseProxy con routing per prefisso /v1/auth/, /v1/payments/, ecc._
 
 ## Task 3.2: Middleware chain ✅
@@ -2769,7 +2769,7 @@ _Completato 2026-04-13: RequestID (X-Request-ID), structured logger, CORS config
 **Files:** `internal/middleware/ratelimit.go`
 _Completato 2026-04-13: 100 req/min anonimo, 1000 req/min autenticato, header X-RateLimit-*_
 
-## Task 3.4: Auth middleware (gRPC call a auth-service) ✅
+## Task 3.4: Auth middleware (gRPC call a forgecore-auth) ✅
 **Files:** `internal/middleware/auth.go`
 _Completato 2026-04-13: verifica JWT via gRPC ValidateToken, propaga X-User-ID, X-Tenant-ID, X-User-Roles_
 
@@ -2782,7 +2782,7 @@ _Completato 2026-04-13: HSTS, X-Content-Type-Options, X-Frame-Options, CSP, Refe
 # FASE 4 — Payment Service
 
 ## Task 4.1: Payment domain + repository ✅
-**Files:** `services/payment-service/internal/domain/payment.go`, `internal/infrastructure/postgres/payment_repo.go`
+**Files:** `services/forgecore-payments/internal/domain/payment.go`, `internal/infrastructure/postgres/payment_repo.go`
 _Completato 2026-04-13: entità Payment, PaymentProvider interface, schema PostgreSQL con RLS_
 
 ## Task 4.2: Stripe adapter ✅
@@ -2808,7 +2808,7 @@ _Completato 2026-04-12: REST handlers POST /v1/payments, POST /v1/payments/{id}/
 # FASE 5 — Notification Service
 
 ## Task 5.1: Email provider (SendGrid) + SMS (Twilio) ✅
-**Files:** `services/notification-service/internal/infrastructure/email/sendgrid.go`, `internal/infrastructure/sms/twilio.go`
+**Files:** `services/forgecore-notifications/internal/infrastructure/email/sendgrid.go`, `internal/infrastructure/sms/twilio.go`
 _Completato 2026-04-12: SendGrid v3 REST API, Twilio Messages API, pure net/http_
 
 ## Task 5.2: NATS consumers ✅
@@ -2824,15 +2824,15 @@ _Completato 2026-04-12: backoff [1m, 5m, 15m, 1h, 4h], max 5 tentativi_
 # FASE 6 — Admin + Audit + Job Services
 
 ## Task 6.1: Admin Service — REST API ✅
-**Files:** `services/admin-service/internal/transport/rest/handlers.go`, `cmd/server/main.go`
+**Files:** `services/forgecore-admin/internal/transport/rest/handlers.go`, `cmd/server/main.go`
 _Completato 2026-04-12: GET /v1/admin/tenants, /users/{id}, POST /users/{id}/disable, GET /stats; stub clients_
 
 ## Task 6.2: Audit Service — append-only consumer ✅
-**Files:** `services/audit-service/internal/transport/nats/consumer.go`, `cmd/server/main.go`
+**Files:** `services/forgecore-audit/internal/transport/nats/consumer.go`, `cmd/server/main.go`
 _Completato 2026-04-12: JetStream durable consumer su audit.>, appende su PostgreSQL_
 
 ## Task 6.3: Job Service — scheduler ✅
-**Files:** `services/job-service/cmd/worker/main.go`, `redis_cleaner.go`
+**Files:** `services/forgecore-jobs/cmd/worker/main.go`, `redis_cleaner.go`
 _Completato 2026-04-12: scheduler tick-based, CleanupTokens handler con Redis scan_
 
 ---
@@ -2840,7 +2840,7 @@ _Completato 2026-04-12: scheduler tick-based, CleanupTokens handler con Redis sc
 # FASE 7 — Permission Service + SDK
 
 ## Task 7.1: RBAC domain + policy evaluator ✅
-**Files:** `services/permission-service/internal/domain/`, `internal/application/check_permission.go`, `internal/infrastructure/postgres/role_repository.go`
+**Files:** `services/forgecore-permissions/internal/domain/`, `internal/application/check_permission.go`, `internal/infrastructure/postgres/role_repository.go`
 _Completato 2026-04-12: CheckPermission con direct perm + role fallback, RoleRepository, REST transport, main.go_
 
 ## Task 7.2: Default roles per tenant ✅
@@ -2848,7 +2848,7 @@ _Completato 2026-04-12: CheckPermission con direct perm + role fallback, RoleRep
 _Completato 2026-04-13: SeedRolesUseCase crea owner/admin/billing-manager/read-only/user per tenant. Idempotente via GetByName._
 
 ## Task 7.3: SDK Go client ✅
-**Files:** `sdk/go/auth/client.go`, `sdk/go/permission/client.go`, `sdk/go/common/`
+**Files:** `sdk/go/auth/client.go`, `sdk/go/permission/client.go`, `sdk/go/clientretry/`, `sdk/go/clienttransport/`
 _Completato 2026-04-13: retry 3x con backoff esponenziale, circuit breaker gobreaker, OTEL trace propagation via OTELTransport._
 
 ---
@@ -2856,11 +2856,11 @@ _Completato 2026-04-13: retry 3x con backoff esponenziale, circuit breaker gobre
 # FASE 8 — Config Service + Webhook Service
 
 ## Task 8.1: Config Service ✅
-**Files:** `services/config-service/internal/transport/rest/handlers.go`, `cmd/server/main.go`
+**Files:** `services/forgecore-config/internal/transport/rest/handlers.go`, `cmd/server/main.go`
 _Completato 2026-04-12: GET/PUT /v1/config/{key}, Redis cache 5min, postgres backend, main.go wired_
 
 ## Task 8.2: Webhook Service ✅
-**Files:** `services/webhook-service/internal/transport/rest/handlers.go`, `internal/infrastructure/postgres/delivery_repository.go`, `cmd/server/main.go`
+**Files:** `services/forgecore-webhooks/internal/transport/rest/handlers.go`, `internal/infrastructure/postgres/delivery_repository.go`, `cmd/server/main.go`
 _Completato 2026-04-12: POST /v1/webhooks/endpoints, POST /v1/webhooks/deliver, HMAC firma, DeliveryRepository_
 
 ---
@@ -2868,11 +2868,11 @@ _Completato 2026-04-12: POST /v1/webhooks/endpoints, POST /v1/webhooks/deliver, 
 # FASE 9 — Storage Service + Subscription Service
 
 ## Task 9.1: Storage Service ✅
-**Files:** `services/storage-service/internal/infrastructure/minio/provider.go`, `internal/transport/rest/handlers.go`, `cmd/server/main.go`
+**Files:** `services/forgecore-storage/internal/infrastructure/minio/provider.go`, `internal/transport/rest/handlers.go`, `cmd/server/main.go`
 _Completato 2026-04-12: MinIO provider (Upload/Delete/Presign), POST /v1/storage/upload, GET /v1/storage/{id}/presign_
 
 ## Task 9.2: Subscription Service ✅
-**Files:** `services/subscription-service/internal/infrastructure/billing/stripe.go`, `internal/infrastructure/postgres/plan_repository.go`, `internal/transport/rest/handlers.go`, `cmd/server/main.go`
+**Files:** `services/forgecore-subscriptions/internal/infrastructure/billing/stripe.go`, `internal/infrastructure/postgres/plan_repository.go`, `internal/transport/rest/handlers.go`, `cmd/server/main.go`
 _Completato 2026-04-12: StripeProvider CreateSubscription/Cancel/ChangePlan, PlanRepository, POST /v1/subscriptions, DELETE /v1/subscriptions/{id}_
 
 ---

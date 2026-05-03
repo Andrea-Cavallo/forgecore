@@ -25,3 +25,7 @@ func (p *Publisher) Publish(ctx context.Context, subject string, payload any) er
 	}
 	return nil
 }
+
+func (p *Publisher) PublishVersioned(ctx context.Context, subject string, event Versioned) error {
+	return p.Publish(ctx, subject, event)
+}

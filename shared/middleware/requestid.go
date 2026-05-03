@@ -9,7 +9,7 @@ import (
 
 type requestIDKey struct{}
 
-const headerRequestID = "X-Request-ID"
+const HeaderRequestID = "X-Request-ID"
 
 // RequestIDFromContext retrieves the request ID from the context.
 func RequestIDFromContext(ctx context.Context) string {
@@ -23,12 +23,12 @@ func RequestIDFromContext(ctx context.Context) string {
 // It uses the incoming X-Request-ID header if present, otherwise generates a new UUID.
 func RequestIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqID := r.Header.Get(headerRequestID)
+		reqID := r.Header.Get(HeaderRequestID)
 		if reqID == "" {
 			reqID = uuid.New().String()
 		}
 		ctx := context.WithValue(r.Context(), requestIDKey{}, reqID)
-		w.Header().Set(headerRequestID, reqID)
+		w.Header().Set(HeaderRequestID, reqID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

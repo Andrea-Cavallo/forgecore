@@ -11,18 +11,18 @@ Sistema a microservizi in Go 1.24 scalabile, sicuro e production-ready composto 
 
 | Servizio | Responsabilita' |
 |---|---|
-| `api-gateway` | Routing, rate limit, auth middleware, API versioning, TLS |
-| `auth-service` | JWT RS256, OAuth2, MFA/TOTP, brute force, device tracking, GDPR |
-| `payment-service` | Pagamenti con provider pluggable (Stripe-first), multi-tenant |
-| `notification-service` | Email (SendGrid) + SMS (Twilio) pluggable, NATS consumer, retry |
-| `admin-service` | Admin REST API, stats aggregate, gestione tenant/utenti |
-| `audit-service` | Audit log immutabile append-only, GDPR compliant |
-| `job-service` | Background jobs: retry notifiche, cleanup token, scheduled tasks |
-| `permission-service` | RBAC/ABAC granulare, policy resource-based, valutazione permessi |
-| `config-service` | Feature flags e configurazione per-tenant (MFA policy, OAuth providers, password rules) |
-| `webhook-service` | Outbound webhook delivery verso sistemi tenant, retry, firma HMAC, delivery log |
-| `storage-service` | File storage S3-compatible (MinIO), ricevute PDF, avatar, export CSV |
-| `subscription-service` | Pagamenti ricorrenti, lifecycle subscription, billing cycle, proration |
+| `forgecore-gateway` | Routing, rate limit, auth middleware, API versioning, TLS |
+| `forgecore-auth` | JWT RS256, OAuth2, MFA/TOTP, brute force, device tracking, GDPR |
+| `forgecore-payments` | Pagamenti con provider pluggable (Stripe-first), multi-tenant |
+| `forgecore-notifications` | Email (SendGrid) + SMS (Twilio) pluggable, NATS consumer, retry |
+| `forgecore-admin` | Admin REST API, stats aggregate, gestione tenant/utenti |
+| `forgecore-audit` | Audit log immutabile append-only, GDPR compliant |
+| `forgecore-jobs` | Background jobs: retry notifiche, cleanup token, scheduled tasks |
+| `forgecore-permissions` | RBAC/ABAC granulare, policy resource-based, valutazione permessi |
+| `forgecore-config` | Feature flags e configurazione per-tenant (MFA policy, OAuth providers, password rules) |
+| `forgecore-webhooks` | Outbound webhook delivery verso sistemi tenant, retry, firma HMAC, delivery log |
+| `forgecore-storage` | File storage S3-compatible (MinIO), ricevute PDF, avatar, export CSV |
+| `forgecore-subscriptions` | Pagamenti ricorrenti, lifecycle subscription, billing cycle, proration |
 
 **Deploy target:** Docker Compose + VPS
 **Comunicazione:** REST/HTTP verso l'esterno, gRPC interno, NATS per eventi asincroni
@@ -38,7 +38,7 @@ Sistema a microservizi in Go 1.24 scalabile, sicuro e production-ready composto 
 ```
 golang-modules/
 ├── services/
-│   ├── api-gateway/
+│   ├── forgecore-gateway/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── proxy/           # Reverse proxy handlers
@@ -47,7 +47,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── auth-service/
+│   ├── forgecore-auth/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── domain/          # User, Token, Session, OAuthProvider, MFADevice
@@ -63,7 +63,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── payment-service/
+│   ├── forgecore-payments/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── domain/          # Payment, Transaction, PaymentProvider interface
@@ -78,7 +78,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── notification-service/
+│   ├── forgecore-notifications/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── domain/          # Notification, EmailProvider, SMSProvider
@@ -92,7 +92,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── admin-service/
+│   ├── forgecore-admin/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── application/     # UseCases: ManageTenants, ManageUsers, Stats
@@ -103,7 +103,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── audit-service/
+│   ├── forgecore-audit/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── domain/          # AuditEvent (immutable)
@@ -117,7 +117,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── job-service/
+│   ├── forgecore-jobs/
 │   │   ├── cmd/worker/main.go
 │   │   ├── internal/
 │   │   │   ├── jobs/            # RetryNotification, CleanupTokens, DailyReport
@@ -125,7 +125,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── permission-service/
+│   ├── forgecore-permissions/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── domain/          # Role, Permission, Policy, Resource
@@ -138,7 +138,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── config-service/
+│   ├── forgecore-config/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── domain/          # TenantConfig, FeatureFlag, ConfigKey
@@ -152,7 +152,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── webhook-service/
+│   ├── forgecore-webhooks/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── domain/          # WebhookEndpoint, WebhookDelivery, WebhookEvent
@@ -165,7 +165,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── storage-service/
+│   ├── forgecore-storage/
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── domain/          # File, Bucket, PresignedURL
@@ -178,7 +178,7 @@ golang-modules/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   └── subscription-service/
+│   └── forgecore-subscriptions/
 │       ├── cmd/server/main.go
 │       ├── internal/
 │       │   ├── domain/          # Subscription, Plan, BillingCycle, Invoice
@@ -204,9 +204,9 @@ golang-modules/
 │
 ├── sdk/
 │   └── go/                      # SDK Go client per i servizi (auth, payment, permission)
-│       ├── auth/                # Client auth-service con retry + circuit breaker
-│       ├── payment/             # Client payment-service
-│       ├── permission/          # Client permission-service
+│       ├── auth/                # Client forgecore-auth con retry + circuit breaker
+│       ├── payment/             # Client forgecore-payments
+│       ├── permission/          # Client forgecore-permissions
 │       └── go.mod
 │
 ├── deployments/
@@ -232,7 +232,7 @@ golang-modules/
 │
 └── docs/
     ├── CLAUDE.md
-    └── superpowers/specs/
+    └── forgecore/specs/
 ```
 
 ---
@@ -552,7 +552,7 @@ nc.Subscribe("payment.succeeded",        h.PaymentReceiptEmailAndSMS)
 nc.Subscribe("payment.failed",           h.PaymentFailedEmail)
 nc.Subscribe("payment.refunded",         h.RefundConfirmEmail)
 nc.Subscribe("admin.user.disabled",      h.AccountDisabledEmail)
-nc.Subscribe("notification.retry",       h.RetryFailed)  // da job-service
+nc.Subscribe("notification.retry",       h.RetryFailed)  // da forgecore-jobs
 ```
 
 ### Retry Strategy
@@ -643,7 +643,7 @@ Request
   → Logger (log ingresso con request-id, method, path)
   → RateLimit (token bucket Redis: 100 req/min IP, 1000 req/min autenticato)
   → CORS
-  → Auth (se route protetta: valida JWT via gRPC auth-service, imposta X-User-ID, X-Tenant-ID, X-User-Roles)
+  → Auth (se route protetta: valida JWT via gRPC forgecore-auth, imposta X-User-ID, X-Tenant-ID, X-User-Roles)
   → TenantContext (imposta tenant_id nel context)
   → Proxy (forwarda al servizio corretto)
   → Logger (log uscita con status, latenza)
@@ -652,10 +652,10 @@ Request
 ### Routing
 
 ```
-/v1/auth/*        → auth-service:8081
-/v1/payments/*    → payment-service:8082
-/v1/admin/*       → admin-service:8084
-/v1/audit/*       → audit-service:8085
+/v1/auth/*        → forgecore-auth:8081
+/v1/payments/*    → forgecore-payments:8082
+/v1/admin/*       → forgecore-admin:8084
+/v1/audit/*       → forgecore-audit:8085
 ```
 
 ---
@@ -671,32 +671,32 @@ services:
       - ./deployments/traefik/traefik.yml:/etc/traefik/traefik.yml
       - letsencrypt:/letsencrypt
 
-  api-gateway:
+  forgecore-gateway:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gateway.rule=Host(`api.yourdomain.com`)"
       - "traefik.http.routers.gateway.tls.certresolver=letsencrypt"
 
-  auth-service:
+  forgecore-auth:
     ports: ["8081:8081", "9091:9091"]
     depends_on: [postgres-auth, redis, vault, nats]
 
-  payment-service:
+  forgecore-payments:
     ports: ["8082:8082", "9092:9092"]
-    depends_on: [postgres-payments, auth-service, vault, nats]
+    depends_on: [postgres-payments, forgecore-auth, vault, nats]
 
-  notification-service:
+  forgecore-notifications:
     depends_on: [postgres-notifications, nats, vault]
 
-  admin-service:
+  forgecore-admin:
     ports: ["8084:8084", "9094:9094"]
-    depends_on: [auth-service, payment-service]
+    depends_on: [forgecore-auth, forgecore-payments]
 
-  audit-service:
+  forgecore-audit:
     ports: ["8085:8085", "9095:9095"]
     depends_on: [postgres-audit, nats]
 
-  job-service:
+  forgecore-jobs:
     depends_on: [redis, nats]
 
   postgres-auth:         image: postgres:16-alpine
@@ -760,7 +760,7 @@ services:
   "time": "2026-03-30T10:00:00Z",
   "level": "INFO",
   "msg": "payment created",
-  "service": "payment-service",
+  "service": "forgecore-payments",
   "version": "1.0.0",
   "env": "production",
   "trace_id": "abc123",
@@ -896,7 +896,7 @@ Stream: NOTIFICATION_RETRY
 ### Consumer durability
 
 ```go
-// Consumer durevole: se notification-service si riavvia, riprende dal punto in cui si era fermato
+// Consumer durevole: se forgecore-notifications si riavvia, riprende dal punto in cui si era fermato
 js.Subscribe("payment.succeeded", handler,
     nats.Durable("notification-payment-succeeded"),
     nats.AckExplicit(),
@@ -907,7 +907,7 @@ js.Subscribe("payment.succeeded", handler,
 
 ### Dead Letter Queue
 
-Dopo `MaxDeliver` tentativi falliti → messaggio finisce in `DLQ.{subject}`. Il `job-service` processa la DLQ e notifica admin via alert.
+Dopo `MaxDeliver` tentativi falliti → messaggio finisce in `DLQ.{subject}`. Il `forgecore-jobs` processa la DLQ e notifica admin via alert.
 
 ---
 
@@ -918,7 +918,7 @@ Dopo `MaxDeliver` tentativi falliti → messaggio finisce in `DLQ.{subject}`. Il
    → crea utente con email_verified = false
    → genera token UUID (TTL 24h) in Redis: email_verify:{token} → userID
    → pubblica auth.user.registered con verifyURL
-   → notification-service invia email con link
+   → forgecore-notifications invia email con link
 
 2. GET /v1/auth/verify-email?token={token}
    → legge Redis → userID
@@ -945,7 +945,7 @@ Dopo `MaxDeliver` tentativi falliti → messaggio finisce in `DLQ.{subject}`. Il
    → sempre risponde 200 (non rivela se email esiste — security best practice)
    → se utente esiste: genera token UUID (TTL 1h) in Redis: password_reset:{token} → userID
    → pubblica auth.user.password_reset con resetURL
-   → notification-service invia email
+   → forgecore-notifications invia email
 
 2. POST /v1/auth/reset-password {"token": "...", "new_password": "..."}
    → valida token Redis → userID
@@ -985,7 +985,7 @@ Problema: come si crea il primo super-admin e il primo tenant?
 
 ```bash
 # Eseguito UNA SOLA VOLTA su primo deploy
-go run ./services/auth-service/cmd/seed \
+go run ./services/forgecore-auth/cmd/seed \
   --tenant-name "System" \
   --admin-email "admin@yourdomain.com" \
   --admin-password "$(openssl rand -base64 32)"
@@ -1071,13 +1071,13 @@ jobs:
     - Upload coverage to Codecov (threshold: 80%)
 
   build:
-    - docker build services/auth-service
-    - docker build services/payment-service
-    - docker build services/notification-service
-    - docker build services/admin-service
-    - docker build services/audit-service
-    - docker build services/job-service
-    - docker build services/api-gateway
+    - docker build services/forgecore-auth
+    - docker build services/forgecore-payments
+    - docker build services/forgecore-notifications
+    - docker build services/forgecore-admin
+    - docker build services/forgecore-audit
+    - docker build services/forgecore-jobs
+    - docker build services/forgecore-gateway
 
   proto:
     - buf lint shared/proto
@@ -1102,7 +1102,7 @@ jobs:
   deploy:
     - ssh VPS
     - docker-compose pull
-    - docker-compose up -d --no-deps --scale api-gateway=2  # rolling update
+    - docker-compose up -d --no-deps --scale forgecore-gateway=2  # rolling update
     - ./scripts/migrate.sh (run migrations)
     - Health check: curl /health/ready x 30s
     - Rollback automatico se health check fallisce
@@ -1112,9 +1112,9 @@ jobs:
 
 ```bash
 # Rolling update su Docker Compose (2 istanze per servizio critico)
-docker-compose up -d --no-deps --scale auth-service=2
+docker-compose up -d --no-deps --scale forgecore-auth=2
 sleep 10  # attendi che nuova istanza sia healthy
-docker-compose up -d --no-deps --scale auth-service=1
+docker-compose up -d --no-deps --scale forgecore-auth=1
 ```
 
 ---
@@ -1261,7 +1261,7 @@ Ogni servizio restituisce errori nel formato:
 }
 ```
 
-### Codici errore auth-service
+### Codici errore forgecore-auth
 
 | Code | HTTP | Descrizione |
 |------|------|-------------|
@@ -1275,7 +1275,7 @@ Ogni servizio restituisce errori nel formato:
 | `EMAIL_ALREADY_EXISTS` | 409 | Email gia' registrata nel tenant |
 | `RESET_TOKEN_INVALID` | 422 | Token reset scaduto o non valido |
 
-### Codici errore payment-service
+### Codici errore forgecore-payments
 
 | Code | HTTP | Descrizione |
 |------|------|-------------|
@@ -1352,7 +1352,7 @@ Chiamate gRPC tra servizi wrapped con circuit breaker (`sony/gobreaker`):
 ### PostgreSQL — backup giornaliero
 
 ```bash
-# job-service: CronJob giornaliero alle 03:00
+# forgecore-jobs: CronJob giornaliero alle 03:00
 pg_dump $DATABASE_URL | gzip | \
   aws s3 cp - s3://your-bucket/backups/$(date +%Y%m%d)/postgres-auth.sql.gz
 
@@ -1370,7 +1370,7 @@ redis-master:
     --save 300 10     # snapshot ogni 300s se 10+ modifiche
 ```
 
-Snapshot copiato su S3 ogni 6 ore dal job-service.
+Snapshot copiato su S3 ogni 6 ore dal forgecore-jobs.
 
 ### RTO/RPO
 
@@ -1533,7 +1533,7 @@ Super-admin puo' cambiare i global defaults.
 ```
 Redis key: config:{tenantID}   TTL: 5min
 Invalidato su ogni PUT /v1/config/tenant
-Config-service pubblica config.updated su NATS → tutti i servizi invalidano la loro cache locale
+forgecore-config pubblica config.updated su NATS → tutti i servizi invalidano la loro cache locale
 ```
 
 ---
@@ -1597,7 +1597,7 @@ Dopo 5 tentativi → status "failed", alert admin, delivery loggata per debug
 
 ```go
 // Subscribes a tutti gli eventi, filtra per endpoint registrati del tenant
-js.Subscribe(">", h.HandleEvent, nats.Durable("webhook-service"))
+js.Subscribe(">", h.HandleEvent, nats.Durable("forgecore-webhooks"))
 ```
 
 ### Endpoints REST (/v1/webhooks)
@@ -1646,7 +1646,7 @@ type File struct {
 
 ```
 1. Client: POST /v1/files/presigned {"filename": "invoice.pdf", "bucket": "invoices"}
-2. Storage-service: genera presigned PUT URL MinIO (TTL 15min)
+2. forgecore-storage: genera presigned PUT URL MinIO (TTL 15min)
 3. Client: PUT direttamente su MinIO (non passa per il servizio)
 4. Client: POST /v1/files/confirm {"key": "..."}  → registra metadata su PostgreSQL
 ```
@@ -1656,11 +1656,11 @@ Nessun file passa attraverso il servizio — riduce latenza e banda.
 ### Generazione PDF Ricevute
 
 ```go
-// job-service: triggered da payment.succeeded
+// forgecore-jobs: triggered da payment.succeeded
 // Genera PDF con template HTML → wkhtmltopdf o chromium headless
 // Carica su MinIO bucket "invoices"
 // Pubblica invoice.created con presigned URL
-// notification-service invia email con link download
+// forgecore-notifications invia email con link download
 ```
 
 ### Endpoints REST (/v1/files)
@@ -1903,7 +1903,7 @@ Package Go standalone riusabile in qualsiasi progetto. Wrappa i client gRPC con 
 import "github.com/yourorg/golang-modules/sdk/go/auth"
 
 client, err := auth.NewClient(auth.Config{
-    Addr:        "auth-service:9091",
+    Addr:        "forgecore-auth:9091",
     TLSCertPath: "/certs/client.crt",
     Timeout:     5 * time.Second,
 })

@@ -12,6 +12,11 @@ import (
 	"io"
 )
 
+const (
+	AES256KeySize = 32
+	MinPepperSize = 16
+)
+
 // PIIEncryptor encrypts and decrypts personally identifiable information using AES-256-GCM.
 // It also provides HMAC-SHA256 deterministic hashing for DB index lookups.
 type PIIEncryptor struct {
@@ -22,6 +27,16 @@ type PIIEncryptor struct {
 // NewPIIEncryptor creates a new encryptor with a 32-byte AES-256 key and a pepper for HMAC hashing.
 func NewPIIEncryptor(key, pepper []byte) *PIIEncryptor {
 	return &PIIEncryptor{key: key, pepper: pepper}
+}
+
+func NewPIIEncryptorChecked(key, pepper []byte) (*PIIEncryptor, error) {
+	if len(key) != AES256KeySize {
+		return nil, fmt.Errorf("chiave AES-256 non valida: %d byte", len(key))
+	}
+	if len(pepper) < MinPepperSize {
+		return nil, fmt.Errorf("pepper HMAC troppo corto: %d byte", len(pepper))
+	}
+	return NewPIIEncryptor(key, pepper), nil
 }
 
 // Hash returns a deterministic HMAC-SHA256 hex hash using the encryptor pepper.
@@ -75,4 +90,3 @@ func (e *PIIEncryptor) Decrypt(encoded string) (string, error) {
 	}
 	return string(plain), nil
 }
-

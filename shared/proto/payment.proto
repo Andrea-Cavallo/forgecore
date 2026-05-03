@@ -4,7 +4,7 @@ package payment.v1;
 
 option go_package = "github.com/Andrea-Cavallo/golang-modules/shared/proto/payment/v1;paymentv1";
 
-// PaymentService exposes payment info for internal gRPC calls from admin-service.
+// PaymentService exposes payment info for internal gRPC calls from forgecore-admin.
 service PaymentService {
   rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
   rpc ListPaymentsByTenant(ListPaymentsByTenantRequest) returns (ListPaymentsByTenantResponse);

@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: superpowers
+    cluster: forgecore
     env: production
 
 alerting:
@@ -14,59 +14,59 @@ rule_files:
   - "rules.yml"
 
 scrape_configs:
-  - job_name: auth-service
+  - job_name: forgecore-auth
     static_configs:
-      - targets: ["auth-service:8081"]
+      - targets: ["forgecore-auth:8081"]
     metrics_path: /metrics
 
-  - job_name: api-gateway
+  - job_name: forgecore-gateway
     static_configs:
-      - targets: ["api-gateway:8080"]
+      - targets: ["forgecore-gateway:8080"]
     metrics_path: /metrics
 
-  - job_name: payment-service
+  - job_name: forgecore-payments
     static_configs:
-      - targets: ["payment-service:8082"]
+      - targets: ["forgecore-payments:8082"]
     metrics_path: /metrics
 
-  - job_name: notification-service
+  - job_name: forgecore-notifications
     static_configs:
-      - targets: ["notification-service:8083"]
+      - targets: ["forgecore-notifications:8083"]
     metrics_path: /metrics
 
-  - job_name: admin-service
+  - job_name: forgecore-admin
     static_configs:
-      - targets: ["admin-service:8084"]
+      - targets: ["forgecore-admin:8084"]
     metrics_path: /metrics
 
-  - job_name: audit-service
+  - job_name: forgecore-audit
     static_configs:
-      - targets: ["audit-service:8085"]
+      - targets: ["forgecore-audit:8085"]
     metrics_path: /metrics
 
-  - job_name: permission-service
+  - job_name: forgecore-permissions
     static_configs:
-      - targets: ["permission-service:8087"]
+      - targets: ["forgecore-permissions:8087"]
     metrics_path: /metrics
 
-  - job_name: config-service
+  - job_name: forgecore-config
     static_configs:
-      - targets: ["config-service:8088"]
+      - targets: ["forgecore-config:8088"]
     metrics_path: /metrics
 
-  - job_name: webhook-service
+  - job_name: forgecore-webhooks
     static_configs:
-      - targets: ["webhook-service:8089"]
+      - targets: ["forgecore-webhooks:8089"]
     metrics_path: /metrics
 
-  - job_name: storage-service
+  - job_name: forgecore-storage
     static_configs:
-      - targets: ["storage-service:8090"]
+      - targets: ["forgecore-storage:8090"]
     metrics_path: /metrics
 
-  - job_name: subscription-service
+  - job_name: forgecore-subscriptions
     static_configs:
-      - targets: ["subscription-service:8091"]
+      - targets: ["forgecore-subscriptions:8091"]
     metrics_path: /metrics
 
   - job_name: postgres

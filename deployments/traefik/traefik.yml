@@ -24,4 +24,4 @@ certificatesResolvers:
 providers:
   docker:
     exposedByDefault: false
-    network: superpowers
+    network: forgecore
