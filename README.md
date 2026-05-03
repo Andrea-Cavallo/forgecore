@@ -1,6 +1,6 @@
 # ForgeCore
 
-![ForgeCore](./coreforge.png)
+![ForgeCore](./forgecore.png)
 
 ForgeCore is a backend SDK and microservices foundation for building production-grade, multi-tenant Go systems faster.
 
