@@ -15,6 +15,7 @@ import (
 	transportREST "github.com/Andrea-Cavallo/golang-modules/services/forgecore-permissions/internal/transport/rest"
 	"github.com/Andrea-Cavallo/golang-modules/shared/configloader"
 	"github.com/Andrea-Cavallo/golang-modules/shared/configschema"
+	"github.com/Andrea-Cavallo/golang-modules/shared/health"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -64,8 +65,8 @@ func run(ctx context.Context) error {
 	h := transportREST.NewHandler(checkUC, grantUC)
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
+	health.Register(mux, "forgecore-permissions", map[string]health.Check{
+		"postgres": pool.Ping,
 	})
 
 	srv := &http.Server{

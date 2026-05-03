@@ -14,6 +14,7 @@ import (
 	transportREST "github.com/Andrea-Cavallo/golang-modules/services/forgecore-admin/internal/transport/rest"
 	"github.com/Andrea-Cavallo/golang-modules/shared/configloader"
 	"github.com/Andrea-Cavallo/golang-modules/shared/configschema"
+	"github.com/Andrea-Cavallo/golang-modules/shared/health"
 )
 
 const (
@@ -56,9 +57,7 @@ func run(ctx context.Context) error {
 	h := transportREST.NewHandler(listTenantsUC, manageUsersUC, statsUC)
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
+	health.Register(mux, "forgecore-admin", nil)
 
 	srv := &http.Server{
 		Addr:         cfg.addr,

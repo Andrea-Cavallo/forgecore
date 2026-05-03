@@ -17,6 +17,7 @@ import (
 	"github.com/Andrea-Cavallo/golang-modules/shared/configloader"
 	"github.com/Andrea-Cavallo/golang-modules/shared/configschema"
 	"github.com/Andrea-Cavallo/golang-modules/shared/events"
+	"github.com/Andrea-Cavallo/golang-modules/shared/health"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -86,7 +87,15 @@ func run(ctx context.Context) error {
 	h := transportHTTP.NewHandler(createUC, refundUC, webhookUC)
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
-	mux.HandleFunc("GET /health", healthHandler)
+	health.Register(mux, "forgecore-payments", map[string]health.Check{
+		"postgres": pool.Ping,
+		"nats": func(context.Context) error {
+			if !nc.IsConnected() {
+				return fmt.Errorf("nats non connesso")
+			}
+			return nil
+		},
+	})
 
 	srv := &http.Server{
 		Addr:         cfg.addr,
@@ -132,8 +141,4 @@ func loadConfig(ctx context.Context) (config, error) {
 		stripeSecretKey:     values.Secret(keyStripeSecret).Value(),
 		stripeWebhookSecret: values.Secret(keyStripeWebhook).Value(),
 	}, nil
-}
-
-func healthHandler(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
 }

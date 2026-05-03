@@ -16,6 +16,7 @@ import (
 	transportREST "github.com/Andrea-Cavallo/golang-modules/services/forgecore-config/internal/transport/rest"
 	"github.com/Andrea-Cavallo/golang-modules/shared/configloader"
 	"github.com/Andrea-Cavallo/golang-modules/shared/configschema"
+	"github.com/Andrea-Cavallo/golang-modules/shared/health"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
@@ -72,8 +73,11 @@ func run(ctx context.Context) error {
 	h := transportREST.NewHandler(getUC, setUC)
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
+	health.Register(mux, "forgecore-config", map[string]health.Check{
+		"postgres": pool.Ping,
+		"redis": func(ctx context.Context) error {
+			return rdb.Ping(ctx).Err()
+		},
 	})
 
 	srv := &http.Server{

@@ -16,6 +16,13 @@ type HTTPMetrics struct {
 	RequestDuration *prometheus.HistogramVec
 }
 
+type OperationalMetrics struct {
+	OutboxMessagesTotal      *prometheus.CounterVec
+	IdempotencyRequestsTotal *prometheus.CounterVec
+	ProviderCallsTotal       *prometheus.CounterVec
+	JobRunsTotal             *prometheus.CounterVec
+}
+
 // NewHTTPMetrics creates and registers Prometheus metrics for the given service.
 // Safe to call multiple times (e.g., in tests): returns the previously registered collector on conflict.
 func NewHTTPMetrics(service string) (*HTTPMetrics, error) {
@@ -59,6 +66,31 @@ func MetricsMiddleware(m *HTTPMetrics, next http.Handler) http.Handler {
 
 // MetricsHandler returns the Prometheus HTTP handler for scraping.
 func MetricsHandler() http.Handler { return promhttp.Handler() }
+
+func NewOperationalMetrics(service string) *OperationalMetrics {
+	return &OperationalMetrics{
+		OutboxMessagesTotal: mustRegisterOrExisting(prometheus.NewCounterVec(prometheus.CounterOpts{
+			Namespace: "forgecore",
+			Subsystem: service,
+			Name:      "outbox_messages_total",
+		}, []string{"status"})).(*prometheus.CounterVec),
+		IdempotencyRequestsTotal: mustRegisterOrExisting(prometheus.NewCounterVec(prometheus.CounterOpts{
+			Namespace: "forgecore",
+			Subsystem: service,
+			Name:      "idempotency_requests_total",
+		}, []string{"operation", "result"})).(*prometheus.CounterVec),
+		ProviderCallsTotal: mustRegisterOrExisting(prometheus.NewCounterVec(prometheus.CounterOpts{
+			Namespace: "forgecore",
+			Subsystem: service,
+			Name:      "provider_calls_total",
+		}, []string{"provider", "operation", "status"})).(*prometheus.CounterVec),
+		JobRunsTotal: mustRegisterOrExisting(prometheus.NewCounterVec(prometheus.CounterOpts{
+			Namespace: "forgecore",
+			Subsystem: service,
+			Name:      "job_runs_total",
+		}, []string{"job", "status"})).(*prometheus.CounterVec),
+	}
+}
 
 type responseWriter struct {
 	http.ResponseWriter

@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: ForgeCore Gateway API
+  version: 0.1.0
+  description: Frontend-facing API surface exposed through forgecore-gateway.
+servers:
+  - url: http://localhost:8080
+security:
+  - bearerAuth: []
+paths:
+  /healthz:
+    get:
+      summary: Gateway health check
+      security: []
+      responses:
+        "200":
+          description: Gateway is alive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /readyz:
+    get:
+      summary: Gateway readiness check
+      security: []
+      responses:
+        "200":
+          description: Gateway is ready to accept traffic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadyResponse"
+  /v1/auth/register:
+    post:
+      summary: Register a new user
+      security: []
+      responses:
+        "200":
+          description: Registration accepted by forgecore-auth
+        "400":
+          $ref: "#/components/responses/Error"
+  /v1/auth/login:
+    post:
+      summary: Login with email and password
+      security: []
+      responses:
+        "200":
+          description: Login accepted by forgecore-auth
+        "401":
+          $ref: "#/components/responses/Error"
+  /v1/auth/refresh:
+    post:
+      summary: Refresh an access token
+      security: []
+      responses:
+        "200":
+          description: Token refreshed by forgecore-auth
+        "401":
+          $ref: "#/components/responses/Error"
+  /v1/auth/forgot-password:
+    post:
+      summary: Request a password reset
+      security: []
+      responses:
+        "200":
+          description: Reset request accepted
+  /v1/auth/reset-password:
+    post:
+      summary: Complete password reset
+      security: []
+      responses:
+        "200":
+          description: Password reset completed
+  /v1/auth/verify-email:
+    post:
+      summary: Verify user email
+      security: []
+      responses:
+        "200":
+          description: Email verified
+  /v1/auth/resend-verification:
+    post:
+      summary: Resend email verification
+      security: []
+      responses:
+        "200":
+          description: Verification resent
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Error:
+      description: Standard gateway error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          examples: ["invalid_token"]
+        message:
+          type: string
+          examples: ["token non valido"]
+        request_id:
+          type: string
+          examples: ["req_123"]
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          const: ok
+    ReadyResponse:
+      type: object
+      required:
+        - status
+        - service
+      properties:
+        status:
+          type: string
+          const: ready
+        service:
+          type: string
+          const: forgecore-gateway
