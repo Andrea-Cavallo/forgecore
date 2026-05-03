@@ -1,8 +1,8 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.26-alpine AS builder
 WORKDIR /workspace
 COPY shared/ shared/
-COPY services/api-gateway/ services/api-gateway/
-WORKDIR /workspace/services/api-gateway
+COPY services/forgecore-gateway/ services/forgecore-gateway/
+WORKDIR /workspace/services/forgecore-gateway
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -o /server ./cmd/server
 
 FROM gcr.io/distroless/static-debian12

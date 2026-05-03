@@ -1,4 +1,4 @@
-.PHONY: build test-shared test-sdk test-auth test-e2e verify boundaries proto-check sdk-check tenant-check smoke scaffold scaffold-dryrun
+.PHONY: build test-shared test-sdk test-auth test-e2e verify boundaries proto-check sdk-check tenant-check runtime-check dockerfile-check rbac-check security-check integration-check smoke scaffold scaffold-dryrun
 
 build:
 	powershell -ExecutionPolicy Bypass -File ./scripts/build-all.ps1
@@ -27,7 +27,22 @@ sdk-check:
 tenant-check:
 	powershell -ExecutionPolicy Bypass -File ./scripts/check-tenant-migrations.ps1
 
-verify: boundaries proto-check sdk-check tenant-check test-shared test-sdk test-auth test-e2e build
+runtime-check:
+	powershell -ExecutionPolicy Bypass -File ./scripts/check-runtime-hardening.ps1
+
+dockerfile-check:
+	powershell -ExecutionPolicy Bypass -File ./scripts/check-dockerfiles.ps1
+
+rbac-check:
+	powershell -ExecutionPolicy Bypass -File ./scripts/check-rbac-security.ps1
+
+security-check:
+	powershell -ExecutionPolicy Bypass -File ./scripts/security-check.ps1
+
+integration-check:
+	powershell -ExecutionPolicy Bypass -File ./scripts/integration-local.ps1
+
+verify: boundaries proto-check sdk-check tenant-check runtime-check dockerfile-check rbac-check test-shared test-sdk test-auth test-e2e build
 
 smoke:
 	powershell -ExecutionPolicy Bypass -File ./scripts/smoke-local.ps1

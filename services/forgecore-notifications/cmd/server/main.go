@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/Andrea-Cavallo/golang-modules/services/forgecore-notifications/internal/application"
 	"github.com/Andrea-Cavallo/golang-modules/services/forgecore-notifications/internal/infrastructure/email"
@@ -15,12 +17,14 @@ import (
 	transportNATS "github.com/Andrea-Cavallo/golang-modules/services/forgecore-notifications/internal/transport/nats"
 	"github.com/Andrea-Cavallo/golang-modules/shared/configloader"
 	"github.com/Andrea-Cavallo/golang-modules/shared/configschema"
+	"github.com/Andrea-Cavallo/golang-modules/shared/health"
 	"github.com/jackc/pgx/v5/pgxpool"
 	natsclient "github.com/nats-io/nats.go"
 )
 
 const (
 	keyDatabaseURL     = "DATABASE_URL"
+	keyPort            = "PORT"
 	keyNATSURL         = "NATS_URL"
 	keySendGridAPIKey  = "SENDGRID_API_KEY"
 	keyFromEmail       = "FROM_EMAIL"
@@ -31,9 +35,11 @@ const (
 	defaultDatabaseURL = "postgres://postgres:postgres@localhost:5432/notifications?sslmode=disable"
 	defaultFromEmail   = "noreply@example.com"
 	defaultFromName    = "ForgeCore"
+	defaultAddr        = ":8083"
 )
 
 var runtimeConfigSchema = configschema.Schema{
+	{Key: keyPort, Default: defaultAddr, Kind: configschema.String},
 	{Key: keyDatabaseURL, Default: defaultDatabaseURL, Kind: configschema.String},
 	{Key: keyNATSURL, Default: natsclient.DefaultURL, Kind: configschema.String},
 	{Key: keySendGridAPIKey, Kind: configschema.String, Secret: true},
@@ -83,11 +89,23 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("init consumers NATS: %w", err)
 	}
 
-	slog.Info("forgecore-notifications avviato")
+	stopHealth := startHealthServer(ctx, cfg.addr, "forgecore-notifications", map[string]health.Check{
+		"postgres": pool.Ping,
+		"nats": func(context.Context) error {
+			if !nc.IsConnected() {
+				return fmt.Errorf("nats non connesso")
+			}
+			return nil
+		},
+	})
+	defer stopHealth()
+
+	slog.Info("forgecore-notifications avviato", "addr", cfg.addr)
 	return consumers.Start(ctx)
 }
 
 type config struct {
+	addr           string
 	databaseURL    string
 	natsURL        string
 	sendGridAPIKey string
@@ -104,6 +122,7 @@ func loadConfig(ctx context.Context) (config, error) {
 		return config{}, err
 	}
 	return config{
+		addr:           values.String(keyPort),
 		databaseURL:    values.String(keyDatabaseURL),
 		natsURL:        values.String(keyNATSURL),
 		sendGridAPIKey: values.Secret(keySendGridAPIKey).Value(),
@@ -113,4 +132,29 @@ func loadConfig(ctx context.Context) (config, error) {
 		twilioToken:    values.Secret(keyTwilioToken).Value(),
 		twilioFrom:     values.String(keyTwilioFrom),
 	}, nil
+}
+
+func startHealthServer(ctx context.Context, addr string, service string, checks map[string]health.Check) func() {
+	mux := http.NewServeMux()
+	health.Register(mux, service, checks)
+	srv := &http.Server{Addr: addr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	slog.Info("server health avviato", "servizio", service, "addr", addr)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("server health fallito", "servizio", service, "addr", addr, "errore", err)
+		}
+	}()
+	go func() {
+		<-ctx.Done()
+		shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(shutCtx); err != nil {
+			slog.Error("shutdown server health fallito", "servizio", service, "addr", addr, "errore", err)
+		}
+	}()
+	return func() {
+		shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(shutCtx)
+	}
 }

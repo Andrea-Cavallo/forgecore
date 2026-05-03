@@ -62,7 +62,7 @@ func main() {
 	defer cancel()
 
 	if err := run(ctx); err != nil {
-		slog.Error("avvio gateway fallito", "errore", err)
+		slog.Error("avvio forgecore-gateway fallito", "errore", err)
 		os.Exit(1)
 	}
 }
@@ -98,7 +98,7 @@ func run(ctx context.Context) error {
 		shutCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(shutCtx); err != nil {
-			slog.Error("shutdown gateway fallito", "errore", err)
+			slog.Error("shutdown forgecore-gateway fallito", "errore", err)
 		}
 	}()
 
@@ -171,6 +171,8 @@ func buildHandler(cfg config, authClient *authgrpc.Client) (http.Handler, error)
 		middleware.CORSMiddleware(cfg.corsOrigin),
 		middleware.RateLimitMiddleware(rateLimiter),
 		authMW.Middleware,
+		middleware.RBACMiddleware,
+		middleware.AuditMiddleware,
 	)
 
 	return chain(r.Build()), nil

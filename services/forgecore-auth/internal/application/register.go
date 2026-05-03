@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
 	"github.com/Andrea-Cavallo/golang-modules/shared/crypto"
 	"github.com/Andrea-Cavallo/golang-modules/shared/events"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -83,11 +83,26 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, input RegisterInput) (*R
 	if err := uc.users.Create(ctx, user); err != nil {
 		return nil, fmt.Errorf("creazione utente fallita: %w", err)
 	}
-	_ = uc.publisher.Publish(ctx, events.SubjectUserRegistered, events.UserRegistered{
+	if err := uc.publisher.Publish(ctx, events.SubjectUserRegistered, events.UserRegistered{
 		TenantID:   user.TenantID,
 		UserID:     user.ID,
 		Email:      input.Email,
 		OccurredAt: time.Now().UTC(),
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("pubblicazione evento registrazione fallita: %w", err)
+	}
+	if err := uc.publisher.Publish(ctx, events.AuditSubject("user.register"), events.AuditEvent{
+		Version:      events.EventVersionV1,
+		EventName:    events.EventAuditRecorded,
+		TenantID:     user.TenantID,
+		ActorID:      &user.ID,
+		ActorType:    "user",
+		Action:       "user.register",
+		ResourceID:   &user.ID,
+		ResourceType: "user",
+		OccurredAt:   time.Now().UTC(),
+	}); err != nil {
+		return nil, fmt.Errorf("pubblicazione audit registrazione fallita: %w", err)
+	}
 	return &RegisterOutput{UserID: user.ID}, nil
 }

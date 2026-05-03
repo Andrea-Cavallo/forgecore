@@ -2,24 +2,44 @@ package application
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
 )
 
 const (
-	accessTokenTTL  = 15 * time.Minute
-	refreshTokenTTL = 7 * 24 * time.Hour
+	accessTokenTTL        = 15 * time.Minute
+	accessTokenTTLSeconds = int64(accessTokenTTL / time.Second)
+	refreshTokenTTL       = 7 * 24 * time.Hour
 )
 
-// JWTService implements TokenIssuer using HMAC-SHA256.
-type JWTService struct{ secret []byte }
+// JWTService implements TokenIssuer using an HMAC-SHA256 key ring.
+type JWTService struct {
+	currentKID string
+	secrets    map[string][]byte
+}
 
 // NewJWTService creates a JWTService with the given HMAC secret.
 func NewJWTService(secret string) *JWTService {
-	return &JWTService{secret: []byte(secret)}
+	return NewRotatingJWTService("current", secret, nil)
+}
+
+// NewRotatingJWTService creates a JWTService with a current signing key and previous validation keys.
+func NewRotatingJWTService(currentKID string, currentSecret string, previous map[string]string) *JWTService {
+	if currentKID == "" {
+		currentKID = "current"
+	}
+	secrets := map[string][]byte{currentKID: []byte(currentSecret)}
+	for kid, secret := range previous {
+		kid = strings.TrimSpace(kid)
+		if kid != "" && secret != "" {
+			secrets[kid] = []byte(secret)
+		}
+	}
+	return &JWTService{currentKID: currentKID, secrets: secrets}
 }
 
 type jwtClaims struct {
@@ -47,7 +67,8 @@ func (s *JWTService) Issue(claims domain.TokenClaims) (domain.TokenPair, error) 
 		Roles:       claims.Roles,
 		MFAVerified: claims.MFAVerified,
 	})
-	accessStr, err := token.SignedString(s.secret)
+	token.Header["kid"] = s.currentKID
+	accessStr, err := token.SignedString(s.secrets[s.currentKID])
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf("firma access token: %w", err)
 	}
@@ -64,7 +85,15 @@ func (s *JWTService) Validate(tokenStr string) (*domain.TokenClaims, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("metodo di firma inatteso: %v", t.Header["alg"])
 		}
-		return s.secret, nil
+		kid, _ := t.Header["kid"].(string)
+		if kid == "" {
+			kid = s.currentKID
+		}
+		secret, ok := s.secrets[kid]
+		if !ok {
+			return nil, domain.ErrTokenInvalid
+		}
+		return secret, nil
 	})
 	if err != nil {
 		return nil, domain.ErrTokenExpired

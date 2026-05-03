@@ -370,6 +370,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\check-boundaries.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\check-proto-contracts.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\check-sdk-clients.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\check-tenant-migrations.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\check-runtime-hardening.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\check-dockerfiles.ps1
 ```
 
 Build every Go module:
@@ -390,6 +392,12 @@ cd shared
 go test ./...
 ```
 
+Verify Docker build contracts after service renames, Dockerfile changes or Go version changes:
+
+```powershell
+docker compose --env-file .env.example build
+```
+
 ## Local Operations
 
 Create a local environment file first:
@@ -403,6 +411,8 @@ Validate local Compose configuration and static checks:
 ```powershell
 make smoke
 ```
+
+`make smoke` fails on any failed child check, including boundary, proto, SDK client, tenant migration, runtime hardening and Dockerfile checks.
 
 Start the local stack:
 
@@ -433,6 +443,7 @@ Operational docs:
 - `docs/forgecore/runbooks/payments.md`
 - `docs/forgecore/runbooks/audit.md`
 - `docs/forgecore/runbooks/storage.md`
+- `docs/forgecore/runbooks/recovery.md`
 
 ## Official Commands
 
@@ -445,6 +456,11 @@ make test-shared
 make test-sdk
 make test-auth
 make test-e2e
+make runtime-check
+make dockerfile-check
+make rbac-check
+make security-check
+make integration-check
 make smoke
 make scaffold-dryrun name=forgecore-example
 make scaffold name=forgecore-example
@@ -458,6 +474,11 @@ PowerShell scripts are available directly as well:
 - `scripts/check-sdk-clients.ps1`
 - `scripts/check-tenant-migrations.ps1`
 - `scripts/e2e-gateway.ps1`
+- `scripts/check-runtime-hardening.ps1`
+- `scripts/check-dockerfiles.ps1`
+- `scripts/check-rbac-security.ps1`
+- `scripts/integration-local.ps1`
+- `scripts/security-check.ps1`
 - `scripts/scaffold-service.ps1` with `-DryRun` support
 - `scripts/smoke-local.ps1`
 

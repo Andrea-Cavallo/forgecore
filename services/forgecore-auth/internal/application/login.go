@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
 	"github.com/Andrea-Cavallo/golang-modules/shared/crypto"
 	"github.com/Andrea-Cavallo/golang-modules/shared/events"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const sessionDuration = 7 * 24 * time.Hour
+const refreshTokenTTLSeconds = int64(sessionDuration / time.Second)
 
 type LoginInput struct {
 	TenantID  uuid.UUID
@@ -59,11 +60,12 @@ func (uc *LoginUseCase) Execute(ctx context.Context, input LoginInput) (*LoginOu
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.Password)); err != nil {
 		return nil, domain.ErrInvalidCredentials
 	}
+	jti := uuid.New().String()
 	pair, err := uc.jwtIssuer.Issue(domain.TokenClaims{
 		UserID:   user.ID,
 		TenantID: user.TenantID,
 		Roles:    user.Roles,
-		JTI:      uuid.New().String(),
+		JTI:      jti,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("emissione token fallita: %w", err)
@@ -81,6 +83,9 @@ func (uc *LoginUseCase) Execute(ctx context.Context, input LoginInput) (*LoginOu
 	if err := uc.sessions.Create(ctx, session); err != nil {
 		return nil, fmt.Errorf("creazione sessione fallita: %w", err)
 	}
+	if err := uc.tokens.StoreRefreshToken(ctx, jti, pair.RefreshToken, refreshTokenTTLSeconds); err != nil {
+		return nil, fmt.Errorf("salvataggio refresh token fallito: %w", err)
+	}
 	if err := uc.publisher.Publish(ctx, events.SubjectUserLogin, events.UserLogin{
 		TenantID:   user.TenantID,
 		UserID:     user.ID,
@@ -89,6 +94,21 @@ func (uc *LoginUseCase) Execute(ctx context.Context, input LoginInput) (*LoginOu
 		OccurredAt: time.Now().UTC(),
 	}); err != nil {
 		return nil, fmt.Errorf("pubblicazione evento login fallita: %w", err)
+	}
+	if err := uc.publisher.Publish(ctx, events.AuditSubject("user.login"), events.AuditEvent{
+		Version:      events.EventVersionV1,
+		EventName:    events.EventAuditRecorded,
+		TenantID:     user.TenantID,
+		ActorID:      &user.ID,
+		ActorType:    "user",
+		Action:       "user.login",
+		ResourceID:   &user.ID,
+		ResourceType: "user",
+		IPAddress:    input.IPAddress,
+		Metadata:     map[string]any{"user_agent": input.UserAgent},
+		OccurredAt:   time.Now().UTC(),
+	}); err != nil {
+		return nil, fmt.Errorf("pubblicazione audit login fallita: %w", err)
 	}
 	return &LoginOutput{Tokens: pair}, nil
 }

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/Andrea-Cavallo/golang-modules/services/forgecore-permissions/internal/application"
+	"github.com/google/uuid"
 )
 
 const (
@@ -16,13 +16,18 @@ const (
 
 // Handler holds all HTTP handlers for the permission service.
 type Handler struct {
-	check *application.CheckPermissionUseCase
-	grant *application.GrantPermissionUseCase
+	check  *application.CheckPermissionUseCase
+	grant  *application.GrantPermissionUseCase
+	revoke *application.RevokePermissionUseCase
 }
 
 // NewHandler constructs the permission REST handler.
-func NewHandler(check *application.CheckPermissionUseCase, grant *application.GrantPermissionUseCase) *Handler {
-	return &Handler{check: check, grant: grant}
+func NewHandler(
+	check *application.CheckPermissionUseCase,
+	grant *application.GrantPermissionUseCase,
+	revoke *application.RevokePermissionUseCase,
+) *Handler {
+	return &Handler{check: check, grant: grant, revoke: revoke}
 }
 
 // RegisterRoutes mounts permission routes on the given mux.
@@ -96,9 +101,13 @@ func (h *Handler) revokeHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "permission id non valido")
 		return
 	}
-	_ = permID
-	_ = tenantID
-	// Revoke not yet exposed as a use case — placeholder returns 204.
+	if err := h.revoke.Execute(r.Context(), application.RevokePermissionInput{
+		TenantID:     tenantID,
+		PermissionID: permID,
+	}); err != nil {
+		writeError(w, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 

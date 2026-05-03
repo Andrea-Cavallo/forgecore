@@ -70,9 +70,17 @@ Phase 11 should add a CI stage that runs:
 govulncheck ./...
 make test-e2e
 make smoke
+make runtime-check
+make security-check
 ```
 
 Container scanning should run against each service image before publishing.
+
+Supporting documents:
+
+- `docs/forgecore/owasp-endpoint-map.md`
+- `docs/forgecore/frontend-token-csrf-policy.md`
+- `docs/forgecore/secrets-lifecycle.md`
 
 ## Definition Of Done
 

@@ -1,12 +1,12 @@
-# Microservizi Go 1.24 — Piano di Implementazione
+# Microservizi Go 1.26 — Piano di Implementazione
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use forgecore:subagent-driven-development (recommended) or forgecore:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Costruire un backend SaaS enterprise-grade in Go 1.24 composto da 10 microservizi riusabili, production-ready, con auth, pagamenti, notifiche, permessi, subscription e storage.
+**Goal:** Costruire un backend SaaS enterprise-grade in Go 1.26 composto da 10 microservizi riusabili, production-ready, con auth, pagamenti, notifiche, permessi, subscription e storage.
 
 **Architecture:** Monorepo con un modulo Go per servizio. Ogni servizio segue DDD a 4 layer (domain → application → infrastructure → transport). Comunicazione REST esterna, gRPC interna, NATS JetStream per eventi asincroni.
 
-**Tech Stack:** Go 1.24, PostgreSQL 16, Redis 7 (Sentinel), NATS JetStream, HashiCorp Vault, Traefik v3, Docker Compose, OpenTelemetry, Prometheus/Grafana, Jaeger
+**Tech Stack:** Go 1.26, PostgreSQL 16, Redis 7 (Sentinel), NATS JetStream, HashiCorp Vault, Traefik v3, Docker Compose, OpenTelemetry, Prometheus/Grafana, Jaeger
 
 **Spec di riferimento:** `docs/forgecore/specs/2026-03-30-microservices-design.md`
 
@@ -64,7 +64,7 @@ mkdir -p scripts
 - [x] **Step 2: Inizializza go.mod per shared**
 
 ```bash
-cd shared && go mod init github.com/yourorg/golang-modules/shared && cd ..
+cd shared && go mod init github.com/Andrea-Cavallo/golang-modules/shared && cd ..
 ```
 
 - [x] **Step 3: Inizializza go.mod per ogni servizio (script)**
@@ -72,7 +72,7 @@ cd shared && go mod init github.com/yourorg/golang-modules/shared && cd ..
 ```bash
 for svc in forgecore-auth forgecore-payments forgecore-notifications forgecore-admin forgecore-audit forgecore-jobs forgecore-gateway forgecore-permissions forgecore-config forgecore-webhooks forgecore-storage forgecore-subscriptions; do
   cd services/$svc
-  go mod init github.com/yourorg/golang-modules/services/$svc
+  go mod init github.com/Andrea-Cavallo/golang-modules/services/$svc
   cd ../..
 done
 ```
@@ -151,7 +151,7 @@ import (
     "context"
     "log/slog"
     "testing"
-    "github.com/yourorg/golang-modules/shared/observability"
+    "github.com/Andrea-Cavallo/golang-modules/shared/observability"
 )
 
 func TestNewLogger_JSON(t *testing.T) {
@@ -381,7 +381,7 @@ package validation_test
 
 import (
     "testing"
-    "github.com/yourorg/golang-modules/shared/validation"
+    "github.com/Andrea-Cavallo/golang-modules/shared/validation"
 )
 
 type testInput struct {
@@ -511,7 +511,7 @@ package crypto_test
 
 import (
     "testing"
-    "github.com/yourorg/golang-modules/shared/crypto"
+    "github.com/Andrea-Cavallo/golang-modules/shared/crypto"
 )
 
 func TestEncryptDecrypt(t *testing.T) {
@@ -638,7 +638,7 @@ import (
     "testing"
     "time"
     "github.com/google/uuid"
-    "github.com/yourorg/golang-modules/shared/pagination"
+    "github.com/Andrea-Cavallo/golang-modules/shared/pagination"
 )
 
 func TestEncodeDecode(t *testing.T) {
@@ -1369,7 +1369,7 @@ git commit -m "feat(infra): add full Docker Compose with 10 DBs, Redis Sentinel,
 ```dockerfile
 # services/forgecore-auth/Dockerfile
 # Stage 1: Build
-FROM golang:1.24-alpine AS builder
+FROM golang:1.26-alpine AS builder
 WORKDIR /app
 
 # Cache delle dipendenze
@@ -1581,7 +1581,7 @@ package domain_test
 
 import (
     "testing"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
 )
 
 func TestNewUser_Valid(t *testing.T) {
@@ -1789,9 +1789,9 @@ import (
     "github.com/google/uuid"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/mock"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/application"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/mocks"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/application"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/mocks"
 )
 
 func TestRegister_Success(t *testing.T) {
@@ -1861,8 +1861,8 @@ import (
     "fmt"
     "github.com/google/uuid"
     "golang.org/x/crypto/bcrypt"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
-    "github.com/yourorg/golang-modules/shared/events"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/Andrea-Cavallo/golang-modules/shared/events"
 )
 
 type PIIEncryptor interface {
@@ -1972,9 +1972,9 @@ import (
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/mock"
     "golang.org/x/crypto/bcrypt"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/application"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/mocks"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/application"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/mocks"
 )
 
 func TestLogin_Success(t *testing.T) {
@@ -2044,7 +2044,7 @@ import (
     "time"
     "github.com/golang-jwt/jwt/v5"
     "github.com/google/uuid"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
 )
 
 type JWTService struct{ secret []byte }
@@ -2110,8 +2110,8 @@ import (
     "time"
     "github.com/google/uuid"
     "golang.org/x/crypto/bcrypt"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
-    "github.com/yourorg/golang-modules/shared/events"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/Andrea-Cavallo/golang-modules/shared/events"
 )
 
 type LoginInput struct {
@@ -2287,8 +2287,8 @@ import (
     "github.com/google/uuid"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/infrastructure/postgres"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/infrastructure/postgres"
     // testcontainers setup helper (vedi Task 1.4 Step 3)
 )
 
@@ -2345,7 +2345,7 @@ import (
     "github.com/google/uuid"
     "github.com/jackc/pgx/v5"
     "github.com/jackc/pgx/v5/pgxpool"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/domain"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/domain"
 )
 
 type UserRepository struct{ db *pgxpool.Pool }
@@ -2473,7 +2473,7 @@ import (
     "net/http/httptest"
     "testing"
     "github.com/stretchr/testify/assert"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/transport/rest"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/transport/rest"
 )
 
 func TestRegisterHandler_InvalidJSON(t *testing.T) {
@@ -2511,8 +2511,8 @@ import (
     "context"
     "encoding/json"
     "net/http"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/application"
-    "github.com/yourorg/golang-modules/shared/validation"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/application"
+    "github.com/Andrea-Cavallo/golang-modules/shared/validation"
 )
 
 type RegisterExecutor interface {
@@ -2624,8 +2624,8 @@ import (
     "log/slog"
     "net/http"
     "os"
-    "github.com/yourorg/golang-modules/services/forgecore-auth/internal/transport/rest"
-    "github.com/yourorg/golang-modules/shared/observability"
+    "github.com/Andrea-Cavallo/golang-modules/services/forgecore-auth/internal/transport/rest"
+    "github.com/Andrea-Cavallo/golang-modules/shared/observability"
 )
 
 func main() {

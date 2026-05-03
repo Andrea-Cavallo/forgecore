@@ -189,6 +189,8 @@ services:
       context: .
       dockerfile: services/forgecore-jobs/Dockerfile
     env_file: *service-env
+    ports:
+      - "${JOB_HEALTH_PORT:-8092}:8092"
     networks: [forgecore]
     depends_on:
       redis: {condition: service_healthy}

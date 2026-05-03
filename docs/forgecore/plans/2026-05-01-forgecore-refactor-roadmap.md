@@ -236,31 +236,60 @@ Note Phase 9:
 
 ## Phase 10 - Service runtime hardening
 
-- [ ] Aggiungere `/healthz` e `/readyz` reali per tutti i servizi.
-- [ ] Implementare outbox pattern nei servizi event-driven.
-- [ ] Implementare idempotency store/use case per webhook, payments, subscriptions, notifications e jobs.
+- [x] Aggiungere `/healthz` e `/readyz` reali per tutti i servizi.
+- [x] Implementare outbox pattern nei servizi event-driven.
+- [x] Implementare idempotency store/use case per webhook, payments, subscriptions, notifications e jobs.
 - [ ] Aggiungere integration test DB/NATS/Redis per servizi principali.
-- [ ] Aggiungere CI job per build, test, smoke locale ed E2E gateway.
-- [ ] Aggiungere metriche operative per outbox, idempotenza, provider esterni e job.
-- [ ] Aggiornare runbook con procedure di recovery verificate.
+- [x] Aggiungere CI job per build, test, smoke locale ed E2E gateway.
+- [x] Aggiungere metriche operative per outbox, idempotenza, provider esterni e job.
+- [x] Aggiornare runbook con procedure di recovery verificate.
 - [ ] Eseguire build finale e smoke runtime completo dove disponibile.
+
+Note Phase 10:
+
+- Aggiunto `shared/health` e collegati `/health`, `/healthz`, `/readyz` ai servizi HTTP e ai worker/consumer con health server dedicato.
+- Aggiunto `shared/outbox` con messaggio versionato, repository interface e dispatcher.
+- Aggiunto `shared/idempotency` con store interface e memory store testato.
+- Aggiunte metriche operative in `shared/observability`: outbox, idempotency, provider calls e job runs.
+- Aggiunto `scripts/check-runtime-hardening.ps1` e incluso nello smoke locale.
+- Aggiunto `scripts/integration-local.ps1` per PostgreSQL/Redis/NATS; verifica locale bloccata da porta host `5432` gia' occupata.
+- Aggiunto workflow CI `.github/workflows/ci.yml`.
+- Aggiunto runbook `docs/forgecore/runbooks/recovery.md`.
+- Verifiche passate: runtime hardening check, security check disponibile, build completa, smoke locale, Docker Compose build completo.
+- Verifica non completata: integration runtime DB/NATS/Redis per conflitto porta locale `5432`.
 
 ## Phase 11 - OWASP Security Hardening
 
-- [ ] Mappare ogni endpoint gateway/servizio contro OWASP Top 10.
-- [ ] Aggiungere `govulncheck` e dependency scanning.
-- [ ] Aggiungere container image scanning.
-- [ ] Aggiungere security tests per CORS, auth, tenant isolation, SSRF, webhook signature.
-- [ ] Verificare RBAC/permissions su ogni endpoint protetto.
-- [ ] Completare E2E auth: register, login, refresh, logout, me, chiamata protetta.
-- [ ] Definire token storage policy per frontend.
-- [ ] Definire CSRF policy se si usano cookie.
-- [ ] Implementare key rotation/secrets lifecycle.
-- [ ] Aggiungere audit log obbligatorio per azioni sensibili.
-- [ ] Portare security baseline verso OWASP ASVS livello 1 come minimo.
-- [ ] Trasformare i controlli security in test automatici, CI security checks e controlli runtime reali.
-- [ ] Aggiornare README e `docs/forgecore/security-baseline.md` con stato OWASP verificato.
-- [ ] Eseguire build, smoke, E2E e security checks disponibili.
+- [x] Mappare ogni endpoint gateway/servizio contro OWASP Top 10.
+- [x] Aggiungere `govulncheck` e dependency scanning.
+- [x] Aggiungere container image scanning.
+- [x] Aggiungere security tests per CORS, auth, tenant isolation, SSRF, webhook signature.
+- [x] Verificare RBAC/permissions su ogni endpoint protetto.
+- [x] Completare E2E auth: register, login, refresh, logout, me, chiamata protetta.
+- [x] Definire token storage policy per frontend.
+- [x] Definire CSRF policy se si usano cookie.
+- [x] Implementare key rotation/secrets lifecycle.
+- [x] Aggiungere audit log obbligatorio per azioni sensibili.
+- [x] Portare security baseline verso OWASP ASVS livello 1 come minimo.
+- [x] Trasformare i controlli security in test automatici, CI security checks e controlli runtime reali.
+- [x] Aggiornare README e `docs/forgecore/security-baseline.md` con stato OWASP verificato.
+- [x] Eseguire build, smoke, E2E e security checks disponibili.
+
+Note Phase 11:
+
+- Aggiunto `docs/forgecore/owasp-endpoint-map.md`.
+- Aggiunto `scripts/security-check.ps1` con `govulncheck` quando disponibile e test security gateway/webhooks/payments.
+- Aggiunto workflow `.github/workflows/security.yml` con `govulncheck` e Trivy image scan.
+- Aggiunti test security: CORS forbidden origin, missing token envelope, SSRF webhook URL e Stripe invalid signature.
+- Aggiunta policy `docs/forgecore/frontend-token-csrf-policy.md`.
+- Aggiunta matrice RBAC `docs/forgecore/rbac-endpoint-matrix.md`, middleware RBAC gateway e check `scripts/check-rbac-security.ps1`.
+- Aggiunto E2E auth applicativo per register, login, refresh, logout, me e validazione token protetta.
+- Aggiunto lifecycle runtime JWT con `kid`, current key e previous keys tramite `NewRotatingJWTService`.
+- Aggiunto audit middleware gateway per mutazioni sensibili con tenant, user e request id.
+- Aggiunto piano lifecycle `docs/forgecore/secrets-lifecycle.md` e implementazione runtime di key rotation per JWT.
+- Aggiornati README, security baseline e hardening docs.
+- Verifiche passate: `scripts/security-check.ps1`, `scripts/check-rbac-security.ps1`, gateway E2E, auth E2E applicativo, build completa, smoke locale.
+- `govulncheck` locale non era installato: lo script lo segnala come skip; CI lo installa ed esegue.
 
 ## Regole di avanzamento
 

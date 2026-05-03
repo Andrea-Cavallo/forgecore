@@ -61,8 +61,9 @@ func run(ctx context.Context) error {
 
 	checkUC := application.NewCheckPermissionUseCase(permRepo, roleRepo)
 	grantUC := application.NewGrantPermissionUseCase(permRepo)
+	revokeUC := application.NewRevokePermissionUseCase(permRepo)
 
-	h := transportREST.NewHandler(checkUC, grantUC)
+	h := transportREST.NewHandler(checkUC, grantUC, revokeUC)
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
 	health.Register(mux, "forgecore-permissions", map[string]health.Check{

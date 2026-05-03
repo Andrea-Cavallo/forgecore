@@ -1,10 +1,11 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.26-alpine AS builder
 WORKDIR /workspace
 COPY shared/ shared/
-COPY services/job-service/ services/job-service/
-WORKDIR /workspace/services/job-service
+COPY services/forgecore-jobs/ services/forgecore-jobs/
+WORKDIR /workspace/services/forgecore-jobs
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -o /worker ./cmd/worker
 
 FROM gcr.io/distroless/static-debian12
 COPY --from=builder /worker /worker
+EXPOSE 8092
 ENTRYPOINT ["/worker"]

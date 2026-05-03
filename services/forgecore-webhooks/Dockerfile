@@ -1,8 +1,8 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.26-alpine AS builder
 WORKDIR /workspace
 COPY shared/ shared/
-COPY services/webhook-service/ services/webhook-service/
-WORKDIR /workspace/services/webhook-service
+COPY services/forgecore-webhooks/ services/forgecore-webhooks/
+WORKDIR /workspace/services/forgecore-webhooks
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -o /server ./cmd/server
 
 FROM gcr.io/distroless/static-debian12

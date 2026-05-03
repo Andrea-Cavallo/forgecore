@@ -1,4 +1,4 @@
-# Microservizi Go 1.24 — Enterprise Production-Ready Design
+# Microservizi Go 1.26 — Enterprise Production-Ready Design
 
 **Data:** 2026-03-30
 **Stato:** Approvato
@@ -7,7 +7,7 @@
 
 ## Contesto e Obiettivo
 
-Sistema a microservizi in Go 1.24 scalabile, sicuro e production-ready composto da **10 servizi** riusabili come fondamenta per qualsiasi SaaS/backend:
+Sistema a microservizi in Go 1.26 scalabile, sicuro e production-ready composto da **10 servizi** riusabili come fondamenta per qualsiasi SaaS/backend:
 
 | Servizio | Responsabilita' |
 |---|---|
@@ -1900,7 +1900,7 @@ Package Go standalone riusabile in qualsiasi progetto. Wrappa i client gRPC con 
 
 ```go
 // Uso dall'esterno in qualsiasi app Go:
-import "github.com/yourorg/golang-modules/sdk/go/auth"
+import "github.com/Andrea-Cavallo/golang-modules/sdk/go/auth"
 
 client, err := auth.NewClient(auth.Config{
     Addr:        "forgecore-auth:9091",

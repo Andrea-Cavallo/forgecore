@@ -146,3 +146,8 @@ Ultimo aggiornamento: 2026-04-08 — sessione completata. Tutti i CRITICAL/HIGH/
 - **N-23** - APERTO: client TypeScript da OpenAPI non ancora generato.
 - **N-24** - RISOLTO: README e `.env.example` aggiornati con guida pratica per frontend, setup database, configurazioni ENV, gateway, servizi, migrazioni e bootstrap locale.
 - **N-25** - APERTO: Phase 11 OWASP Security Hardening aggiunta; ForgeCore e' security-aware ma non ancora security-verified con test automatici, CI security checks e controlli runtime reali.
+- **N-26** - PARZIALMENTE RISOLTO: Phase 10 runtime hardening implementata per health/readiness, outbox SDK, idempotency SDK, metriche operative, CI e recovery runbook; integration runtime DB/NATS/Redis bloccata localmente da porta `5432` gia' occupata.
+- **N-27** - RISOLTO: Phase 11 implementata per endpoint map, security tests, token/CSRF policy, CI govulncheck/Trivy, security script, RBAC endpoint-by-endpoint, auth E2E completo, runtime key rotation JWT e audit obbligatorio.
+- **N-28** - RISOLTO: Dockerfile dei servizi usavano path legacy (`auth-service`, `api-gateway`, ecc.) e Go 1.24; aggiornati a `services/forgecore-*`, Go 1.26 e aggiunto `check-dockerfiles.ps1`.
+- **N-29** - RISOLTO: smoke locale non propagava errori dei check figli, log runtime troppo generici e revoke permissions era un endpoint senza use case reale. Corretto smoke, normalizzati messaggi log principali/health con servizio e addr, aggiunto `RevokePermissionUseCase` e verificati test/build/Docker Compose build.
+- **N-30** - RISOLTO: Phase 11 completata con RBAC gateway endpoint-by-endpoint, audit middleware per azioni sensibili, JWT key rotation runtime, auth E2E applicativo completo e check automatico `check-rbac-security.ps1`.
