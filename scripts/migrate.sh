@@ -6,41 +6,60 @@ set -euo pipefail
 
 SERVICE=${1:-}
 DIRECTION=${2:-up}
+SERVICES=(
+  forgecore-auth
+  forgecore-payments
+  forgecore-notifications
+  forgecore-audit
+  forgecore-permissions
+  forgecore-config
+  forgecore-webhooks
+  forgecore-storage
+  forgecore-subscriptions
+)
 
 if [ -z "$SERVICE" ]; then
   echo "Uso: $0 <service> [up|down]"
-  echo "Servizi: forgecore-auth forgecore-payments forgecore-notifications forgecore-admin forgecore-audit"
-  echo "         forgecore-jobs forgecore-gateway forgecore-permissions forgecore-config forgecore-webhooks"
-  echo "         forgecore-storage forgecore-subscriptions"
+  echo "Servizi: all ${SERVICES[*]}"
   exit 1
 fi
 
-case "$SERVICE" in
-  forgecore-auth)         DB_URL="${AUTH_DATABASE_URL:?AUTH_DATABASE_URL non impostata}" ;;
-  forgecore-payments)      DB_URL="${PAYMENT_DATABASE_URL:?PAYMENT_DATABASE_URL non impostata}" ;;
-  forgecore-notifications) DB_URL="${NOTIFICATION_DATABASE_URL:?NOTIFICATION_DATABASE_URL non impostata}" ;;
-  forgecore-admin)        DB_URL="${ADMIN_DATABASE_URL:?ADMIN_DATABASE_URL non impostata}" ;;
-  forgecore-audit)        DB_URL="${AUDIT_DATABASE_URL:?AUDIT_DATABASE_URL non impostata}" ;;
-  forgecore-jobs)          DB_URL="${JOB_DATABASE_URL:?JOB_DATABASE_URL non impostata}" ;;
-  forgecore-gateway)          DB_URL="${GATEWAY_DATABASE_URL:?GATEWAY_DATABASE_URL non impostata}" ;;
-  forgecore-permissions)   DB_URL="${PERMISSION_DATABASE_URL:?PERMISSION_DATABASE_URL non impostata}" ;;
-  forgecore-config)       DB_URL="${CONFIG_DATABASE_URL:?CONFIG_DATABASE_URL non impostata}" ;;
-  forgecore-webhooks)      DB_URL="${WEBHOOK_DATABASE_URL:?WEBHOOK_DATABASE_URL non impostata}" ;;
-  forgecore-storage)      DB_URL="${STORAGE_DATABASE_URL:?STORAGE_DATABASE_URL non impostata}" ;;
-  forgecore-subscriptions) DB_URL="${SUBSCRIPTION_DATABASE_URL:?SUBSCRIPTION_DATABASE_URL non impostata}" ;;
-  *)
-    echo "Servizio sconosciuto: $SERVICE"
+database_url_for() {
+  case "$1" in
+    forgecore-auth)          echo "${AUTH_DATABASE_URL:-postgres://forgecore:changeme@localhost:5432/forgecore?sslmode=disable}" ;;
+    forgecore-payments)      echo "${PAYMENT_DATABASE_URL:-postgres://forgecore:changeme@localhost:5432/forgecore?sslmode=disable}" ;;
+    forgecore-notifications) echo "${NOTIFICATION_DATABASE_URL:-postgres://forgecore:changeme@localhost:5432/forgecore?sslmode=disable}" ;;
+    forgecore-audit)         echo "${AUDIT_DATABASE_URL:-postgres://forgecore:changeme@localhost:5432/forgecore?sslmode=disable}" ;;
+    forgecore-permissions)   echo "${PERMISSION_DATABASE_URL:-postgres://forgecore:changeme@localhost:5432/forgecore?sslmode=disable}" ;;
+    forgecore-config)        echo "${CONFIG_DATABASE_URL:-postgres://forgecore:changeme@localhost:5432/forgecore?sslmode=disable}" ;;
+    forgecore-webhooks)      echo "${WEBHOOK_DATABASE_URL:-postgres://forgecore:changeme@localhost:5432/forgecore?sslmode=disable}" ;;
+    forgecore-storage)       echo "${STORAGE_DATABASE_URL:-postgres://forgecore:changeme@localhost:5432/forgecore?sslmode=disable}" ;;
+    forgecore-subscriptions) echo "${SUBSCRIPTION_DATABASE_URL:-postgres://forgecore:changeme@localhost:5432/forgecore?sslmode=disable}" ;;
+    *) return 1 ;;
+  esac
+}
+
+run_migration() {
+  local service="$1"
+  local db_url
+  db_url="$(database_url_for "$service")"
+  local migrations_path="services/${service}/migrations"
+
+  if [ ! -d "$migrations_path" ]; then
+    echo "Directory migrazioni non trovata: $migrations_path"
     exit 1
-    ;;
-esac
+  fi
 
-MIGRATIONS_PATH="services/${SERVICE}/migrations"
+  echo "Esecuzione migrazione $DIRECTION per $service..."
+  migrate -path "$migrations_path" -database "$db_url" "$DIRECTION"
+  echo "Migrazione completata per $service."
+}
 
-if [ ! -d "$MIGRATIONS_PATH" ]; then
-  echo "Directory migrazioni non trovata: $MIGRATIONS_PATH"
-  exit 1
+if [ "$SERVICE" = "all" ]; then
+  for svc in "${SERVICES[@]}"; do
+    run_migration "$svc"
+  done
+  exit 0
 fi
 
-echo "Esecuzione migrazione $DIRECTION per $SERVICE..."
-migrate -path "$MIGRATIONS_PATH" -database "$DB_URL" "$DIRECTION"
-echo "Migrazione completata."
+run_migration "$SERVICE"

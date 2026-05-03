@@ -271,6 +271,95 @@ cd shared
 go test ./...
 ```
 
+## Local Operations
+
+Validate local Compose configuration and static checks:
+
+```powershell
+make smoke
+```
+
+Start the local stack:
+
+```powershell
+docker compose up -d postgres redis nats minio prometheus grafana
+```
+
+Run all migrations:
+
+```bash
+./scripts/migrate.sh all up
+```
+
+Bootstrap local dependencies:
+
+```bash
+./scripts/bootstrap.sh
+```
+
+Operational docs:
+
+- `docs/forgecore/reliability-patterns.md`
+- `docs/forgecore/security-baseline.md`
+- `docs/forgecore/runbooks/tenant.md`
+- `docs/forgecore/runbooks/webhooks.md`
+- `docs/forgecore/runbooks/jobs.md`
+- `docs/forgecore/runbooks/payments.md`
+- `docs/forgecore/runbooks/audit.md`
+- `docs/forgecore/runbooks/storage.md`
+
+## Official Commands
+
+ForgeCore includes a Makefile for common workflows:
+
+```powershell
+make verify
+make build
+make test-shared
+make test-sdk
+make test-auth
+make test-e2e
+make smoke
+make scaffold-dryrun name=forgecore-example
+make scaffold name=forgecore-example
+```
+
+PowerShell scripts are available directly as well:
+
+- `scripts/build-all.ps1`
+- `scripts/check-boundaries.ps1`
+- `scripts/check-proto-contracts.ps1`
+- `scripts/check-sdk-clients.ps1`
+- `scripts/check-tenant-migrations.ps1`
+- `scripts/e2e-gateway.ps1`
+- `scripts/scaffold-service.ps1` with `-DryRun` support
+- `scripts/smoke-local.ps1`
+
+## Frontend Integration
+
+Frontend applications should call `forgecore-gateway` as the public API entrypoint.
+
+The first frontend-facing contract is documented in:
+
+- `docs/forgecore/frontend-api-readiness.md`
+- `docs/forgecore/openapi/forgecore-gateway.v1.yaml`
+
+Gateway E2E coverage currently verifies CORS preflight, security headers, health/readiness and public auth proxying:
+
+```powershell
+make test-e2e
+```
+
+## Releases
+
+Release policy:
+
+- changelog: `CHANGELOG.md`
+- release strategy: `docs/forgecore/release.md`
+- architecture decisions: `docs/forgecore/adr/`
+
+Breaking changes must update the compatibility matrix and changelog.
+
 ## Contributing
 
 Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR.

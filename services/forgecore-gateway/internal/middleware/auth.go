@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -10,6 +11,8 @@ import (
 // publicPaths are URL path prefixes that bypass JWT authentication.
 var publicPaths = []string{
 	"/health",
+	"/healthz",
+	"/readyz",
 	"/v1/auth/register",
 	"/v1/auth/login",
 	"/v1/auth/refresh",
@@ -23,6 +26,12 @@ var publicPaths = []string{
 // AuthMiddleware validates JWTs via the forgecore-auth gRPC endpoint.
 type AuthMiddleware struct {
 	client *authgrpc.Client
+}
+
+type errorResponse struct {
+	Code      string `json:"code"`
+	Message   string `json:"message"`
+	RequestID string `json:"request_id,omitempty"`
 }
 
 // NewAuthMiddleware creates an AuthMiddleware backed by an authgrpc.Client.
@@ -40,12 +49,12 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 		}
 		token := extractBearerToken(r)
 		if token == "" {
-			http.Error(w, `{"error":"token mancante"}`, http.StatusUnauthorized)
+			writeAuthError(w, r, "missing_token", "token mancante")
 			return
 		}
 		resp, err := m.client.ValidateToken(r.Context(), token)
 		if err != nil || !resp.Valid {
-			http.Error(w, `{"error":"token non valido"}`, http.StatusUnauthorized)
+			writeAuthError(w, r, "invalid_token", "token non valido")
 			return
 		}
 		// Propagate identity headers to upstream services.
@@ -72,4 +81,17 @@ func extractBearerToken(r *http.Request) string {
 		return ""
 	}
 	return strings.TrimPrefix(auth, prefix)
+}
+
+func writeAuthError(w http.ResponseWriter, r *http.Request, code string, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnauthorized)
+	resp := errorResponse{
+		Code:      code,
+		Message:   message,
+		RequestID: r.Header.Get(HeaderRequestID),
+	}
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		return
+	}
 }

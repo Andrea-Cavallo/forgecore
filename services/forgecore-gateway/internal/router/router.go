@@ -25,7 +25,15 @@ func (r *Router) Health(w http.ResponseWriter, req *http.Request) {
 	_, _ = w.Write([]byte(`{"status":"ok"}`)) // network errors after headers are sent are non-actionable
 }
 
+func (r *Router) Ready(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`{"status":"ready","service":"forgecore-gateway"}`)) // network errors after headers are sent are non-actionable
+}
+
 func (r *Router) Build() http.Handler {
 	r.mux.HandleFunc("/health", r.Health)
+	r.mux.HandleFunc("/healthz", r.Health)
+	r.mux.HandleFunc("/readyz", r.Ready)
 	return r.mux
 }

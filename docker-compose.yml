@@ -1,8 +1,10 @@
-version: "3.9"
-
 networks:
   forgecore:
     driver: bridge
+
+x-service-env: &service-env
+  - path: .env
+    required: false
 
 volumes:
   postgres_data:
@@ -124,7 +126,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-auth/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${AUTH_PORT:-8081}:8081"
       - "${AUTH_GRPC_PORT:-9091}:9091"
@@ -137,7 +139,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-payments/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${PAYMENT_PORT:-8082}:8082"
       - "${PAYMENT_GRPC_PORT:-9092}:9092"
@@ -150,7 +152,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-notifications/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${NOTIFICATION_PORT:-8083}:8083"
     networks: [forgecore]
@@ -162,7 +164,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-admin/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${ADMIN_PORT:-8084}:8084"
     networks: [forgecore]
@@ -173,7 +175,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-audit/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${AUDIT_PORT:-8085}:8085"
       - "${AUDIT_GRPC_PORT:-9095}:9095"
@@ -186,7 +188,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-jobs/Dockerfile
-    env_file: .env
+    env_file: *service-env
     networks: [forgecore]
     depends_on:
       redis: {condition: service_healthy}
@@ -196,7 +198,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-gateway/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${GATEWAY_PORT:-8080}:8080"
     networks: [forgecore]
@@ -207,7 +209,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-permissions/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${PERMISSION_PORT:-8087}:8087"
       - "${PERMISSION_GRPC_PORT:-9097}:9097"
@@ -219,7 +221,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-config/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${CONFIG_PORT:-8088}:8088"
       - "${CONFIG_GRPC_PORT:-9098}:9098"
@@ -232,7 +234,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-webhooks/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${WEBHOOK_PORT:-8089}:8089"
     networks: [forgecore]
@@ -244,7 +246,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-storage/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${STORAGE_PORT:-8090}:8090"
     networks: [forgecore]
@@ -256,7 +258,7 @@ services:
     build:
       context: .
       dockerfile: services/forgecore-subscriptions/Dockerfile
-    env_file: .env
+    env_file: *service-env
     ports:
       - "${SUBSCRIPTION_PORT:-8091}:8091"
       - "${SUBSCRIPTION_GRPC_PORT:-9099}:9099"

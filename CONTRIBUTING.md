@@ -122,3 +122,12 @@ Update `README.md` when a contribution changes:
 - operational workflow
 
 Update `docs/forgecore/compatibility-matrix.md` when changing proto, events, schema, or SDK compatibility.
+
+## Release Contributions
+
+Release-related changes must update:
+
+- `CHANGELOG.md`
+- `docs/forgecore/release.md` if policy changes
+- `docs/forgecore/compatibility-matrix.md` if compatibility changes
+- ADRs in `docs/forgecore/adr/` for major architectural decisions
