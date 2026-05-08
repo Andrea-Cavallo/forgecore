@@ -1,0 +1,440 @@
+{
+  "info": {
+    "_postman_id": "7e70d870-fc0f-4f28-8db5-000000000001",
+    "name": "ForgeCore Gateway API",
+    "description": "Collection frontend-facing per ForgeCore. Usa forgecore-gateway come unico ingresso pubblico e copre health, auth, route protette, esempi applicativi e controlli negativi.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('request_id')) {",
+          "  pm.collectionVariables.set('request_id', 'req-' + Date.now());",
+          "}",
+          "pm.collectionVariables.set('idempotency_key', 'idem-' + Date.now() + '-' + Math.random().toString(16).slice(2));"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('response time below 2000ms', function () {",
+          "  pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "tenant_id", "value": "00000000-0000-0000-0000-000000000001", "type": "string" },
+    { "key": "user_id", "value": "00000000-0000-0000-0000-000000000002", "type": "string" },
+    { "key": "admin_user_id", "value": "00000000-0000-0000-0000-000000000003", "type": "string" },
+    { "key": "email", "value": "demo@forgecore.local", "type": "string" },
+    { "key": "password", "value": "ChangeMe123!", "type": "string" },
+    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "refresh_token", "value": "", "type": "string" },
+    { "key": "request_id", "value": "req-local", "type": "string" },
+    { "key": "idempotency_key", "value": "idem-local", "type": "string" },
+    { "key": "payment_id", "value": "00000000-0000-0000-0000-000000000010", "type": "string" },
+    { "key": "customer_id", "value": "cus_demo_001", "type": "string" },
+    { "key": "plan_id", "value": "00000000-0000-0000-0000-000000000020", "type": "string" },
+    { "key": "subscription_id", "value": "00000000-0000-0000-0000-000000000021", "type": "string" },
+    { "key": "permission_id", "value": "00000000-0000-0000-0000-000000000030", "type": "string" },
+    { "key": "file_id", "value": "00000000-0000-0000-0000-000000000040", "type": "string" },
+    { "key": "config_key", "value": "frontend.theme", "type": "string" },
+    { "key": "webhook_secret", "value": "whsec_demo_secret", "type": "string" },
+    { "key": "webhook_url", "value": "https://example.com/webhooks/forgecore", "type": "string" },
+    { "key": "allowed_origin", "value": "http://localhost:5173", "type": "string" },
+    { "key": "blocked_origin", "value": "https://evil.example", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{access_token}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET healthz",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "X-Request-ID", "value": "{{request_id}}" }],
+            "url": "{{base_url}}/healthz"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('health is ok', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "GET readyz",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "X-Request-ID", "value": "{{request_id}}" }],
+            "url": "{{base_url}}/readyz"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('ready is ok', function () { pm.response.to.have.status(200); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-ID", "value": "{{tenant_id}}" },
+              { "key": "X-Request-ID", "value": "{{request_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"Demo\",\n  \"last_name\": \"User\"\n}"
+            },
+            "url": "{{base_url}}/v1/auth/register"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('register accepted or validation error', function () { pm.expect([201, 200, 400, 409, 422]).to.include(pm.response.code); });", "if (pm.response.code === 201) { const json = pm.response.json(); if (json.user_id) pm.collectionVariables.set('user_id', json.user_id); }"] } }]
+        },
+        {
+          "name": "POST login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-ID", "value": "{{tenant_id}}" },
+              { "key": "X-Request-ID", "value": "{{request_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"device_id\": \"postman-local\",\n  \"user_agent\": \"Postman\"\n}"
+            },
+            "url": "{{base_url}}/v1/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('login response handled', function () { pm.expect([200, 400, 401, 422]).to.include(pm.response.code); });", "if (pm.response.code === 200) { const json = pm.response.json(); if (json.access_token) pm.collectionVariables.set('access_token', json.access_token); if (json.refresh_token) pm.collectionVariables.set('refresh_token', json.refresh_token); }"] } }]
+        },
+        {
+          "name": "POST refresh",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-ID", "value": "{{tenant_id}}" },
+              { "key": "X-Request-ID", "value": "{{request_id}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" },
+            "url": "{{base_url}}/v1/auth/refresh"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('refresh accepted or unauthorized', function () { pm.expect([200, 400, 401, 422]).to.include(pm.response.code); });", "if (pm.response.code === 200) { const json = pm.response.json(); if (json.access_token) pm.collectionVariables.set('access_token', json.access_token); if (json.refresh_token) pm.collectionVariables.set('refresh_token', json.refresh_token); }"] } }]
+        },
+        {
+          "name": "POST forgot password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Tenant-ID", "value": "{{tenant_id}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" },
+            "url": "{{base_url}}/v1/auth/forgot-password"
+          }
+        },
+        {
+          "name": "POST reset password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Tenant-ID", "value": "{{tenant_id}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"replace-with-reset-token\",\n  \"user_id\": \"{{user_id}}\",\n  \"new_password\": \"{{password}}\"\n}" },
+            "url": "{{base_url}}/v1/auth/reset-password"
+          }
+        },
+        {
+          "name": "POST verify email",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Tenant-ID", "value": "{{tenant_id}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"replace-with-email-token\",\n  \"user_id\": \"{{user_id}}\"\n}" },
+            "url": "{{base_url}}/v1/auth/verify-email"
+          }
+        },
+        {
+          "name": "POST resend verification",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Tenant-ID", "value": "{{tenant_id}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" },
+            "url": "{{base_url}}/v1/auth/resend-verification"
+          }
+        },
+        {
+          "name": "GET OAuth authorize",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-ID", "value": "{{tenant_id}}" }],
+            "url": "{{base_url}}/v1/auth/oauth/google"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "POST create payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Request-ID", "value": "{{request_id}}" },
+              { "key": "Idempotency-Key", "value": "{{idempotency_key}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 4990,\n  \"currency\": \"EUR\",\n  \"customer_id\": \"{{customer_id}}\"\n}" },
+            "url": "{{base_url}}/v1/payments"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('payment create response', function () { pm.expect([201, 401, 403, 422]).to.include(pm.response.code); });", "if (pm.response.code === 201) { const json = pm.response.json(); if (json.id) pm.collectionVariables.set('payment_id', json.id); }"] } }]
+        },
+        {
+          "name": "GET list payments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Request-ID", "value": "{{request_id}}" }],
+            "url": "{{base_url}}/v1/payments?limit=20"
+          }
+        },
+        {
+          "name": "POST refund payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Idempotency-Key", "value": "{{idempotency_key}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 1000\n}" },
+            "url": "{{base_url}}/v1/payments/{{payment_id}}/refund"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "POST create subscription",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Idempotency-Key", "value": "{{idempotency_key}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"plan_id\": \"{{plan_id}}\",\n  \"customer_id\": \"{{customer_id}}\"\n}" },
+            "url": "{{base_url}}/v1/subscriptions"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('subscription create response', function () { pm.expect([201, 401, 403, 422]).to.include(pm.response.code); });", "if (pm.response.code === 201) { const json = pm.response.json(); if (json.id) pm.collectionVariables.set('subscription_id', json.id); }"] } }]
+        },
+        {
+          "name": "DELETE cancel subscription",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Idempotency-Key", "value": "{{idempotency_key}}" }],
+            "url": "{{base_url}}/v1/subscriptions/{{subscription_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Config",
+      "item": [
+        {
+          "name": "PUT config value",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"value\": \"dark\"\n}" },
+            "url": "{{base_url}}/v1/config/{{config_key}}"
+          }
+        },
+        {
+          "name": "GET config value",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/config/{{config_key}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "POST permission check",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"resource_type\": \"project\",\n  \"resource_id\": null,\n  \"action\": \"read\"\n}" },
+            "url": "{{base_url}}/v1/permissions/check"
+          }
+        },
+        {
+          "name": "POST grant permission",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"resource_type\": \"project\",\n  \"resource_id\": null,\n  \"action\": \"read\"\n}" },
+            "url": "{{base_url}}/v1/permissions/grant"
+          }
+        },
+        {
+          "name": "DELETE revoke permission",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/v1/permissions/{{permission_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Storage",
+      "item": [
+        {
+          "name": "POST upload file",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "bucket", "value": "demo", "type": "text" },
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": "{{base_url}}/v1/storage/upload"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('storage upload response', function () { pm.expect([201, 400, 401, 403, 422]).to.include(pm.response.code); });", "if (pm.response.code === 201) { const json = pm.response.json(); if (json.id) pm.collectionVariables.set('file_id', json.id); }"] } }]
+        },
+        {
+          "name": "GET presigned url",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/storage/{{file_id}}/presign"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "POST register endpoint",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"url\": \"{{webhook_url}}\",\n  \"secret\": \"{{webhook_secret}}\",\n  \"events\": [\"payment.succeeded.v1\", \"subscription.created.v1\"]\n}" },
+            "url": "{{base_url}}/v1/webhooks/endpoints"
+          }
+        },
+        {
+          "name": "POST deliver event",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"event_type\": \"payment.succeeded.v1\",\n  \"payload\": {\n    \"payment_id\": \"{{payment_id}}\",\n    \"amount\": 4990,\n    \"currency\": \"EUR\"\n  }\n}" },
+            "url": "{{base_url}}/v1/webhooks/deliver"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "GET tenants",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/admin/tenants?limit=20"
+          }
+        },
+        {
+          "name": "GET user by id",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/admin/users/{{admin_user_id}}"
+          }
+        },
+        {
+          "name": "POST disable user",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/v1/admin/users/{{admin_user_id}}/disable"
+          }
+        },
+        {
+          "name": "GET stats",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/admin/stats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Negative And Security",
+      "item": [
+        {
+          "name": "GET protected without token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "X-Request-ID", "value": "{{request_id}}" }],
+            "url": "{{base_url}}/v1/payments"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('missing token is unauthorized', function () { pm.response.to.have.status(401); });", "pm.test('gateway error envelope', function () { const json = pm.response.json(); pm.expect(json).to.have.property('code'); pm.expect(json).to.have.property('message'); });"] } }]
+        },
+        {
+          "name": "OPTIONS allowed CORS preflight",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "OPTIONS",
+            "header": [
+              { "key": "Origin", "value": "{{allowed_origin}}" },
+              { "key": "Access-Control-Request-Method", "value": "POST" },
+              { "key": "Access-Control-Request-Headers", "value": "Authorization, Content-Type, X-Tenant-ID, X-Request-ID, Idempotency-Key" }
+            ],
+            "url": "{{base_url}}/v1/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('preflight accepted', function () { pm.expect([200, 204]).to.include(pm.response.code); });"] } }]
+        },
+        {
+          "name": "OPTIONS blocked CORS preflight",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "OPTIONS",
+            "header": [
+              { "key": "Origin", "value": "{{blocked_origin}}" },
+              { "key": "Access-Control-Request-Method", "value": "POST" }
+            ],
+            "url": "{{base_url}}/v1/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('blocked origin has no allow-origin header', function () { pm.expect(pm.response.headers.get('Access-Control-Allow-Origin')).to.be.oneOf([undefined, null, '']); });"] } }]
+        },
+        {
+          "name": "POST unsafe webhook URL",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"url\": \"http://127.0.0.1:8080/internal\",\n  \"secret\": \"{{webhook_secret}}\",\n  \"events\": [\"payment.succeeded.v1\"]\n}" },
+            "url": "{{base_url}}/v1/webhooks/endpoints"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('unsafe webhook rejected or unauthorized before upstream', function () { pm.expect([400, 401, 403, 422]).to.include(pm.response.code); });"] } }]
+        }
+      ]
+    }
+  ]
+}

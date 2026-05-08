@@ -2,121 +2,224 @@
 
 ![ForgeCore](./forgecore.png)
 
-ForgeCore is a backend SDK and microservices foundation for building production-grade, multi-tenant Go systems faster.
+ForgeCore e' una base backend in Go per costruire piattaforme multi-tenant con microservizi, SDK condivisa e regole operative gia' pronte. Non e' un singolo servizio: e' un monorepo che raccoglie primitive comuni, servizi di riferimento e script di verifica per partire piu' velocemente senza ricostruire ogni volta autenticazione, configurazione, tenant isolation, eventi, osservabilita', paginazione, storage, pagamenti e permessi.
 
-It exists to remove the repetitive backend work every serious service platform needs: configuration loading, tenant isolation, validation, encrypted PII handling, pagination, typed events, observability, service clients, PostgreSQL RLS conventions, and operational guardrails.
+L'obiettivo e' dare a chi sviluppa frontend, backend o prodotti SaaS un backend coerente da usare come fondazione. Il frontend parla con un solo ingresso pubblico, `forgecore-gateway`; i servizi interni restano dietro al gateway e seguono confini DDD chiari.
 
-Instead of rebuilding these pieces inside every service, ForgeCore gives you a coherent set of shared packages and reference services that can be reused as a backend platform layer.
+## Perche' Esiste
 
-## Why ForgeCore Exists
+Ogni piattaforma seria finisce per riscrivere gli stessi pezzi:
 
-Modern backend services often repeat the same infrastructure code:
+- login, sessioni, JWT, refresh token e ruoli
+- configurazioni da YAML ed ENV
+- isolamento tenant con PostgreSQL Row Level Security
+- errori HTTP coerenti e request id
+- validazione input
+- eventi NATS tipizzati e versionati
+- paginazione a cursore
+- cifratura PII e gestione segreti
+- metriche Prometheus, log JSON e tracing
+- Docker Compose, migrazioni, seed e smoke test
+- controlli automatici su boundary, proto, SDK, Dockerfile e sicurezza
 
-- environment and YAML configuration
-- tenant context propagation
-- PostgreSQL row-level security setup
-- request IDs and auth claims
-- validation and structured errors
-- NATS event publishing
-- cursor pagination
-- PII encryption and hashing
-- Prometheus metrics and JSON logs
-- retry-aware service clients
-- migration and boundary checks
+ForgeCore mette questi pezzi in una SDK condivisa e in servizi pronti da estendere. Serve a ridurre codice duplicato, mantenere naming coerente e rendere piu' semplice aggiungere nuovi bounded context senza rompere le regole della piattaforma.
 
-ForgeCore turns those concerns into reusable, tested building blocks. The intent is to help teams start new services with the boring but important foundations already solved.
+## A Chi Serve
 
-## What You Can Build With It
+ForgeCore e' utile se stai costruendo:
 
-Use ForgeCore when you need backend services that are:
+- un SaaS multi-tenant
+- una dashboard amministrativa
+- un portale clienti con abbonamenti e pagamenti
+- un marketplace con vendor e backoffice
+- un'app con storage, webhook, audit e notifiche
+- una piattaforma interna con RBAC e configurazioni tenant-specific
 
-- multi-tenant by default
-- observable from day one
-- consistent across service boundaries
-- ready for PostgreSQL RLS
-- event-driven with typed NATS payloads
-- configurable through YAML and environment variables
-- organized with DDD-style boundaries
-- fast to scaffold and hard to accidentally wire incorrectly
+Se vuoi solo una piccola API monolitica, ForgeCore puo' essere piu' grande del necessario. Se invece vuoi una base production-oriented per servizi separati e frontend moderni, il progetto nasce proprio per quello.
 
-## Repository Layout
+## Stato Frontend
+
+ForgeCore e' gia' utilizzabile per prototipi frontend e sviluppo interno tramite `forgecore-gateway`.
+
+Gia' presente:
+
+- gateway pubblico su `http://localhost:8080`
+- CORS allowlist con `CORS_ORIGIN`
+- security headers e preflight prima dell'autenticazione
+- error envelope per errori auth del gateway
+- auth flow applicativo coperto da test per register, login, refresh, logout, me e token validation
+- route protette con JWT e RBAC lato gateway
+- OpenAPI iniziale in `docs/forgecore/openapi/forgecore-gateway.v1.yaml`
+- policy token/CSRF in `docs/forgecore/frontend-token-csrf-policy.md`
+- matrice RBAC in `docs/forgecore/rbac-endpoint-matrix.md`
+- collection Postman in `docs/forgecore/postman/ForgeCore.postman_collection.json`
+- environment Postman in `docs/forgecore/postman/ForgeCore.local.postman_environment.json`
+
+Manca ancora per dichiarare la parte frontend production-ready:
+
+- client TypeScript generato o scaffoldato da OpenAPI
+- OpenAPI completa con request e response schema per tutti i servizi
+- seed locale unico per tenant, admin, ruoli e piani demo
+- verifica E2E runtime completa con Compose, PostgreSQL, Redis, NATS, MinIO e migrazioni reali
+- harness frontend con Playwright o Cypress
+- pacchetto SDK frontend versionato e compatibile con la versione OpenAPI
+
+Il piano di verifica completo vive in `docs/forgecore/frontend-testplan.md`.
+
+## Cosa Puoi Costruire
+
+Esempi concreti di uso:
+
+1. Dashboard SaaS multi-tenant: login, ruoli, configurazioni tenant, audit log e schermate admin protette.
+2. Portale billing: registrazione utente, verifica email, scelta piano, abbonamento, pagamento e retry idempotente.
+3. Backoffice marketplace: gestione vendor, upload file, notifiche e webhook di integrazione.
+4. Pannello impostazioni embedded: OAuth, feature flag tenant-specific e CORS su origini approvate.
+5. Console customer support: ricerca utenti, audit trail, disabilitazione account e permessi granulari.
+6. File manager aziendale: storage metadata, presigned URL, paginazione e audit sulle operazioni sensibili.
+7. Notification preference center: preferenze notifiche, resend verification e tracking eventi.
+
+## Architettura In Breve
 
 ```text
-shared/                 Core SDK packages reused by services
-sdk/go/                 Go client SDK for internal service calls
-services/               ForgeCore reference microservices
+frontend
+   |
+   v
+forgecore-gateway
+   |
+   +-- forgecore-auth
+   +-- forgecore-payments
+   +-- forgecore-subscriptions
+   +-- forgecore-permissions
+   +-- forgecore-config
+   +-- forgecore-storage
+   +-- forgecore-webhooks
+   +-- forgecore-notifications
+   +-- forgecore-admin
+   +-- forgecore-audit
+   +-- forgecore-jobs
+```
+
+Ogni servizio segue la direzione:
+
+```text
+transport -> application -> domain
+infrastructure -> domain
+```
+
+`domain/` contiene regole pure e interfacce. `application/` orchestra use case. `infrastructure/` implementa database, Redis, NATS e provider esterni. `transport/` espone REST, gRPC, consumer e handler.
+
+## Struttura Repository
+
+```text
+shared/                 SDK backend condivisa
+sdk/go/                 client Go interni standardizzati
+services/               microservizi ForgeCore
 deployments/            Prometheus, Grafana, Traefik, OTEL, alerting
-scripts/                Verification and operational scripts
-docs/forgecore/         Compatibility and client process docs
-docker-compose.yml      Local development stack
+scripts/                build, smoke, check, scaffold, migrazioni
+docs/forgecore/         specifiche, piani, runbook, OpenAPI, Postman
+docker-compose.yml      stack locale
 ```
 
-## Run ForgeCore For A Frontend
+## Servizi
 
-A frontend should integrate with ForgeCore through `forgecore-gateway`.
+| Servizio | Gateway | REST locale | gRPC locale | Scopo |
+| --- | --- | ---: | ---: | --- |
+| `forgecore-gateway` | pubblico | 8080 | - | ingresso HTTP per frontend |
+| `forgecore-auth` | `/v1/auth/*` | 8081 | 9091 | utenti, sessioni, JWT, MFA, OAuth |
+| `forgecore-payments` | `/v1/payments/*` | 8082 | 9092 | pagamenti e Stripe |
+| `forgecore-notifications` | `/v1/notifications/*` | 8083 | - | notifiche e SendGrid |
+| `forgecore-admin` | `/v1/admin/*` | 8084 | - | backoffice |
+| `forgecore-audit` | `/v1/audit/*` | 8085 | 9095 | audit append-only |
+| `forgecore-jobs` | interno | - | - | worker Redis/NATS |
+| `forgecore-permissions` | `/v1/permissions/*` | 8087 | 9097 | ruoli e permessi |
+| `forgecore-config` | `/v1/config/*` | 8088 | 9098 | configurazioni runtime |
+| `forgecore-webhooks` | `/v1/webhooks/*` | 8089 | - | endpoint e consegne webhook |
+| `forgecore-storage` | `/v1/storage/*` | 8090 | - | metadata file e MinIO |
+| `forgecore-subscriptions` | `/v1/subscriptions/*` | 8091 | 9099 | piani e abbonamenti |
 
-The gateway is the public HTTP entrypoint. It forwards requests to the internal services, applies request IDs, CORS, security headers, rate limiting and authentication checks.
+Il frontend non dovrebbe chiamare direttamente le porte dei servizi. In uso normale passa sempre da `forgecore-gateway`.
 
-Default local frontend API base URL:
+## Avvio Rapido
 
-```text
-http://localhost:8080
-```
+Prerequisiti consigliati:
 
-Recommended first local setup:
+- Go target `1.26`
+- Docker e Docker Compose
+- PowerShell per gli script locali
+- Bash, Git Bash o WSL per `scripts/migrate.sh`
+- `make`, oppure esecuzione diretta degli script PowerShell
+
+Configura l'ambiente:
 
 ```powershell
 Copy-Item .env.example .env
+```
+
+Imposta le origini frontend consentite:
+
+```env
+CORS_ORIGIN=http://localhost:3000,http://localhost:5173
+```
+
+Esegui i controlli statici principali:
+
+```powershell
 make smoke
+```
+
+Avvia le dipendenze:
+
+```powershell
 docker compose up -d postgres redis nats minio prometheus grafana
 ```
 
-Run database migrations from Git Bash, WSL or another Bash shell with the `migrate` CLI installed:
+Esegui le migrazioni:
 
 ```bash
 ./scripts/migrate.sh all up
 ```
 
-Bootstrap local dependencies and seed a first admin user:
+Esegui il bootstrap locale:
 
 ```bash
 SUPERADMIN_EMAIL=admin@forgecore.local SUPERADMIN_PASSWORD=ChangeMe123! ./scripts/bootstrap.sh
 ```
 
-Then start the backend services:
+Avvia gateway e auth:
 
 ```powershell
 docker compose up -d forgecore-auth forgecore-gateway
 ```
 
-For the full local platform:
-
-```powershell
-docker compose up -d
-```
-
-Check the gateway:
+Verifica il gateway:
 
 ```powershell
 Invoke-RestMethod http://localhost:8080/healthz
 Invoke-RestMethod http://localhost:8080/readyz
 ```
 
-For frontend development, set `CORS_ORIGIN` in `.env` to the origin used by your app:
+Per avviare tutto:
 
-```env
-CORS_ORIGIN=http://localhost:3000,http://localhost:5173
+```powershell
+docker compose up -d
 ```
 
-Frontend requests should use:
+## Usare Da Frontend
 
-- base URL: `http://localhost:8080`
-- `Authorization: Bearer <access-token>` for protected routes
-- `X-Tenant-ID: <tenant-id>` when the tenant is not fully derived from the token
-- `X-Request-ID: <uuid-or-request-id>` for correlation
-- `Idempotency-Key: <stable-key>` for retried mutations such as payments and subscriptions
+Base URL locale:
 
-Public routes currently exposed through the gateway:
+```text
+http://localhost:8080
+```
+
+Header principali:
+
+- `Authorization: Bearer <access-token>` per route protette
+- `X-Tenant-ID: <tenant-id>` quando il tenant non deriva dal token
+- `X-Request-ID: <request-id>` per correlazione log e audit
+- `Idempotency-Key: <stable-key>` per mutazioni ritentate
+
+Route pubbliche:
 
 - `GET /healthz`
 - `GET /readyz`
@@ -130,79 +233,75 @@ Public routes currently exposed through the gateway:
 - `GET /v1/auth/oauth/{provider}`
 - `GET /v1/auth/oauth/{provider}/callback`
 
-The frontend-facing contract starts here:
+Documentazione utile:
 
 - `docs/forgecore/frontend-api-readiness.md`
+- `docs/forgecore/frontend-token-csrf-policy.md`
+- `docs/forgecore/rbac-endpoint-matrix.md`
 - `docs/forgecore/openapi/forgecore-gateway.v1.yaml`
+- `docs/forgecore/frontend-testplan.md`
+- `docs/forgecore/postman/ForgeCore.postman_collection.json`
 
-Run the gateway E2E smoke test:
+## Postman
 
-```powershell
-make test-e2e
-```
-
-## Services
-
-ForgeCore service names use the pattern:
+Importa la collection:
 
 ```text
-forgecore-<bounded-context>
+docs/forgecore/postman/ForgeCore.postman_collection.json
 ```
 
-Current services:
+Importa l'environment locale opzionale:
 
-| Service | Public through gateway | Local REST | Local gRPC | Main dependencies | Purpose |
-| --- | --- | ---: | ---: | --- | --- |
-| `forgecore-gateway` | yes | 8080 | - | auth gRPC | Public API entrypoint for frontends |
-| `forgecore-auth` | yes, under `/v1/auth/*` | 8081 | 9091 | PostgreSQL, Redis | Users, sessions, JWT, MFA, OAuth |
-| `forgecore-payments` | protected, under `/v1/payments/*` | 8082 | 9092 | PostgreSQL, NATS, Stripe | Payments and Stripe webhooks |
-| `forgecore-notifications` | protected, under `/v1/notifications/*` | 8083 | - | PostgreSQL, NATS, SendGrid | Email/notification delivery |
-| `forgecore-admin` | protected, under `/v1/admin/*` | 8084 | - | PostgreSQL | Backoffice API |
-| `forgecore-audit` | protected, under `/v1/audit/*` | 8085 | 9095 | PostgreSQL, NATS | Append-only audit trail |
-| `forgecore-jobs` | no direct frontend route | - | - | Redis, NATS | Async jobs and schedulers |
-| `forgecore-permissions` | protected, under `/v1/permissions/*` | 8087 | 9097 | PostgreSQL | Roles, permissions and policies |
-| `forgecore-config` | protected, under `/v1/config/*` | 8088 | 9098 | PostgreSQL, Redis | Runtime and tenant configuration |
-| `forgecore-webhooks` | protected/admin, under `/v1/webhooks/*` | 8089 | - | PostgreSQL, NATS | Outbound webhook endpoints and deliveries |
-| `forgecore-storage` | protected, under `/v1/storage/*` | 8090 | - | PostgreSQL, MinIO | File metadata and object storage |
-| `forgecore-subscriptions` | protected, under `/v1/subscriptions/*` | 8091 | 9099 | PostgreSQL, Stripe | Plans and subscriptions |
+```text
+docs/forgecore/postman/ForgeCore.local.postman_environment.json
+```
 
-The frontend should not call service ports directly in normal use. Use `forgecore-gateway` and let the gateway route to the correct bounded context.
+La collection include:
 
-## Shared SDK Packages
+- health e readiness
+- auth register/login/refresh
+- esempi protetti con bearer token
+- pagamenti, subscriptions, config, permissions, webhooks, storage e admin
+- richieste negative per missing token e CORS
+- variabili Postman per `base_url`, `tenant_id`, `access_token`, `refresh_token`, `user_id`, `request_id` e `idempotency_key`
 
-The `shared/` module contains the reusable backend SDK:
+Il login salva automaticamente `access_token` e `refresh_token` se la risposta li contiene.
 
-| Package | Purpose |
+## SDK Condivisa
+
+`shared/` contiene i package riutilizzabili:
+
+| Package | Responsabilita' |
 | --- | --- |
-| `apperrors` | Application error codes, wrapping, and HTTP mapping |
-| `configloader` | Loads default, YAML, and ENV configuration |
-| `configschema` | Defines config keys, types, defaults, required fields, and secrets |
-| `configsource` | Config sources for maps, YAML files, and ENV |
-| `crypto` | AES-256-GCM PII encryption and HMAC lookup hashing |
-| `events` | Typed, versioned NATS event payloads and publisher |
-| `i18n` | Amount/date formatting helpers |
-| `middleware` | Tenant, auth claims, request ID, and public header constants |
-| `observability` | JSON logger, Prometheus metrics, OTLP tracing, shutdown helpers |
-| `pagination` | Cursor encode/decode and limit normalization |
-| `postgres` | Tenant-aware PostgreSQL transaction helper |
-| `proto` | gRPC contracts |
-| `validation` | Validator wrapper and field-level validation errors |
+| `apperrors` | error model e mapping HTTP |
+| `configloader` | composizione default, YAML ed ENV |
+| `configschema` | schema, required, default e secret |
+| `configsource` | sorgenti YAML, ENV e mappe |
+| `crypto` | AES-256-GCM e HMAC per PII |
+| `events` | eventi NATS tipizzati e versionati |
+| `i18n` | formati data/importi |
+| `middleware` | tenant, auth claims e request id |
+| `observability` | log, metriche, tracing e shutdown |
+| `pagination` | cursori e limiti |
+| `postgres` | transazioni tenant-aware |
+| `proto` | contratti gRPC |
+| `validation` | validazione input |
 
-## Configuration
+## Configurazione
 
-ForgeCore services read configuration through the shared SDK:
+Le configurazioni sono caricate con questa priorita':
 
 ```text
-default values < YAML file < environment variables
+default < YAML < ENV
 ```
 
-Set an optional YAML file with:
+File YAML opzionale:
 
 ```powershell
 $env:FORGECORE_CONFIG_FILE = "C:\path\to\forgecore.yaml"
 ```
 
-Example YAML:
+Esempio:
 
 ```yaml
 port: ":8088"
@@ -210,244 +309,52 @@ database_url: "postgres://postgres:postgres@localhost:5432/config?sslmode=disabl
 redis_addr: "localhost:6379"
 ```
 
-Environment variables always win over YAML values.
+Le variabili piu' importanti sono:
 
-For local Docker Compose, copy `.env.example` to `.env`. The most important variables are:
+| Variabile | Scopo |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL usato dai servizi nel Compose |
+| `*_DATABASE_URL` | URL specifici per migrazioni |
+| `REDIS_ADDR` | Redis per auth, config e jobs |
+| `NATS_URL` | NATS per eventi |
+| `CORS_ORIGIN` | origini frontend consentite |
+| `AUTH_GRPC_ADDR` | auth gRPC usato dal gateway |
+| `*_SERVICE_URL` | upstream HTTP interni del gateway |
+| `STRIPE_SECRET_KEY` | pagamenti e subscriptions |
+| `STRIPE_WEBHOOK_SECRET` | verifica webhook Stripe |
+| `SENDGRID_API_KEY` | invio notifiche |
+| `MINIO_ENDPOINT` | storage oggetti |
+| `SUPERADMIN_EMAIL` | seed admin locale |
+| `SUPERADMIN_PASSWORD` | password admin locale |
 
-| Variable | Used by | Meaning |
-| --- | --- | --- |
-| `DATABASE_URL` | runtime services | PostgreSQL URL inside the Compose network |
-| `*_DATABASE_URL` | migration script | PostgreSQL URLs from the host machine |
-| `REDIS_ADDR` | auth, config, jobs | Redis address inside the Compose network |
-| `NATS_URL` | event-driven services | NATS URL inside the Compose network |
-| `CORS_ORIGIN` | gateway | Comma-separated frontend origins |
-| `AUTH_GRPC_ADDR` | gateway | Internal gRPC address of `forgecore-auth` |
-| `*_SERVICE_URL` | gateway | Internal HTTP upstream URLs |
-| `STRIPE_SECRET_KEY` | payments, subscriptions | Stripe API secret |
-| `STRIPE_WEBHOOK_SECRET` | payments | Stripe webhook signing secret |
-| `SENDGRID_API_KEY` | notifications | SendGrid API key |
-| `MINIO_ENDPOINT` | storage | MinIO endpoint |
-| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | storage | MinIO credentials |
-| `SUPERADMIN_EMAIL` / `SUPERADMIN_PASSWORD` | bootstrap | Local seed admin |
-
-`DATABASE_URL` is intentionally shared by the current local stack: every service uses the same PostgreSQL database with tenant-aware tables and RLS policies. The migration script also accepts service-specific URLs, so the same project can later run with one database per service:
-
-```bash
-AUTH_DATABASE_URL=postgres://... ./scripts/migrate.sh forgecore-auth up
-PAYMENT_DATABASE_URL=postgres://... ./scripts/migrate.sh forgecore-payments up
-```
-
-Secrets should be declared in schemas with `Secret: true` and read through:
+I segreti devono essere letti tramite wrapper dedicati, per evitare logging accidentale:
 
 ```go
 values.Secret("STRIPE_SECRET_KEY").Value()
 ```
 
-This keeps the string representation redacted and reduces accidental secret logging.
+## Sviluppare Un Nuovo Servizio
 
-## Using ForgeCore In Your Service
-
-Add the shared module to your service and use the SDK packages directly.
-
-Example configuration schema:
-
-```go
-package main
-
-import (
-    "context"
-
-    "github.com/Andrea-Cavallo/golang-modules/shared/configloader"
-    "github.com/Andrea-Cavallo/golang-modules/shared/configschema"
-)
-
-const (
-    keyPort        = "PORT"
-    keyDatabaseURL = "DATABASE_URL"
-)
-
-var schema = configschema.Schema{
-    {Key: keyPort, Default: ":8080", Kind: configschema.String},
-    {Key: keyDatabaseURL, Required: true, Kind: configschema.String},
-}
-
-func load(ctx context.Context) error {
-    values, err := configloader.NewDefault(schema).Load(ctx)
-    if err != nil {
-        return err
-    }
-    _ = values.String(keyPort)
-    return nil
-}
-```
-
-Example tenant-aware PostgreSQL transaction:
-
-```go
-err := postgres.WithTenantTx(ctx, pool, tenantID, func(tx pgx.Tx) error {
-    _, err := tx.Exec(ctx, "INSERT INTO records (tenant_id, name) VALUES ($1, $2)", tenantID, name)
-    return err
-})
-```
-
-Example versioned event:
-
-```go
-event := events.PaymentSucceeded{
-    Version:       events.EventVersionV1,
-    EventName:     events.EventPaymentSucceeded,
-    CorrelationID: requestID,
-    TenantID:      tenantID,
-    UserID:        userID,
-    PaymentID:     paymentID,
-    Amount:        amount,
-    Currency:      "EUR",
-    Provider:      "stripe",
-    OccurredAt:    time.Now().UTC(),
-}
-```
-
-## Architecture Rules
-
-Each service follows this dependency direction:
-
-```text
-transport -> application -> domain
-infrastructure -> domain
-```
-
-Rules:
-
-- `domain/` contains entities, value objects, and repository interfaces.
-- `application/` contains use cases and depends only on domain and application ports.
-- `infrastructure/` implements repositories and external providers.
-- `transport/` contains REST, gRPC, NATS consumers, and handlers.
-- No infrastructure imports are allowed in `domain/` or `application/`.
-
-Check boundaries with:
+Genera uno scheletro DDD:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\check-boundaries.ps1
+make scaffold-dryrun name=forgecore-example
+make scaffold name=forgecore-example
 ```
 
-## Multi-Tenancy
+Regole principali:
 
-Every tenant-aware table must include:
+- nome servizio `forgecore-<bounded-context>`
+- modulo Go sotto `services/forgecore-<name>`
+- niente import infrastrutturali in `domain/` o `application/`
+- migrazioni tenant-aware con `tenant_id`, indice e RLS
+- errori gestiti esplicitamente
+- funzioni Go massimo 50 righe
+- log applicativi in italiano
 
-- `tenant_id UUID NOT NULL`
-- an index on `tenant_id`
-- PostgreSQL row-level security
-- a `tenant_isolation` policy
+## Verifica
 
-Verify migrations with:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\check-tenant-migrations.ps1
-```
-
-## Compatibility
-
-Compatibility rules live in:
-
-```text
-docs/forgecore/compatibility-matrix.md
-```
-
-Highlights:
-
-- proto packages use `*.v1`
-- NATS event names use `.v1`
-- existing proto field numbers must not be reused
-- existing event fields must not be removed without a new event version
-- database migrations are append-only
-
-## Verification
-
-Run these before considering a change complete:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\check-boundaries.ps1
-powershell -ExecutionPolicy Bypass -File .\scripts\check-proto-contracts.ps1
-powershell -ExecutionPolicy Bypass -File .\scripts\check-sdk-clients.ps1
-powershell -ExecutionPolicy Bypass -File .\scripts\check-tenant-migrations.ps1
-powershell -ExecutionPolicy Bypass -File .\scripts\check-runtime-hardening.ps1
-powershell -ExecutionPolicy Bypass -File .\scripts\check-dockerfiles.ps1
-```
-
-Build every Go module:
-
-```powershell
-$mods = Get-ChildItem -Recurse -File -Filter go.mod
-foreach ($mod in $mods) {
-    Push-Location (Split-Path $mod.FullName -Parent)
-    go build ./...
-    Pop-Location
-}
-```
-
-Run shared SDK tests:
-
-```powershell
-cd shared
-go test ./...
-```
-
-Verify Docker build contracts after service renames, Dockerfile changes or Go version changes:
-
-```powershell
-docker compose --env-file .env.example build
-```
-
-## Local Operations
-
-Create a local environment file first:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Validate local Compose configuration and static checks:
-
-```powershell
-make smoke
-```
-
-`make smoke` fails on any failed child check, including boundary, proto, SDK client, tenant migration, runtime hardening and Dockerfile checks.
-
-Start the local stack:
-
-```powershell
-docker compose up -d postgres redis nats minio prometheus grafana
-```
-
-Run all migrations:
-
-```bash
-./scripts/migrate.sh all up
-```
-
-Bootstrap local dependencies:
-
-```bash
-./scripts/bootstrap.sh
-```
-
-Operational docs:
-
-- `docs/forgecore/reliability-patterns.md`
-- `docs/forgecore/security-baseline.md`
-- `docs/forgecore/owasp-security-hardening.md`
-- `docs/forgecore/runbooks/tenant.md`
-- `docs/forgecore/runbooks/webhooks.md`
-- `docs/forgecore/runbooks/jobs.md`
-- `docs/forgecore/runbooks/payments.md`
-- `docs/forgecore/runbooks/audit.md`
-- `docs/forgecore/runbooks/storage.md`
-- `docs/forgecore/runbooks/recovery.md`
-
-## Official Commands
-
-ForgeCore includes a Makefile for common workflows:
+Comandi ufficiali:
 
 ```powershell
 make verify
@@ -462,51 +369,54 @@ make rbac-check
 make security-check
 make integration-check
 make smoke
-make scaffold-dryrun name=forgecore-example
-make scaffold name=forgecore-example
 ```
 
-PowerShell scripts are available directly as well:
+Script disponibili:
 
 - `scripts/build-all.ps1`
 - `scripts/check-boundaries.ps1`
 - `scripts/check-proto-contracts.ps1`
 - `scripts/check-sdk-clients.ps1`
 - `scripts/check-tenant-migrations.ps1`
-- `scripts/e2e-gateway.ps1`
 - `scripts/check-runtime-hardening.ps1`
 - `scripts/check-dockerfiles.ps1`
 - `scripts/check-rbac-security.ps1`
-- `scripts/integration-local.ps1`
 - `scripts/security-check.ps1`
-- `scripts/scaffold-service.ps1` with `-DryRun` support
+- `scripts/e2e-gateway.ps1`
+- `scripts/integration-local.ps1`
 - `scripts/smoke-local.ps1`
+- `scripts/scaffold-service.ps1`
 
-## Frontend Integration
+Il test plan frontend completo e' in `docs/forgecore/frontend-testplan.md`.
 
-Frontend applications should call `forgecore-gateway` as the public API entrypoint. The practical setup flow is documented in `Run ForgeCore For A Frontend` above.
+## Documenti Importanti
 
-The frontend-facing contract is documented in:
+- `docs/forgecore/studio-approfondito-sdk-backend.md`
+- `docs/forgecore/plans/2026-05-01-forgecore-refactor-roadmap.md`
+- `docs/forgecore/issues.md`
+- `docs/forgecore/compatibility-matrix.md`
+- `docs/forgecore/client-generation.md`
+- `docs/forgecore/reliability-patterns.md`
+- `docs/forgecore/security-baseline.md`
+- `docs/forgecore/owasp-security-hardening.md`
+- `docs/forgecore/release.md`
+- `docs/forgecore/runbooks/tenant.md`
+- `docs/forgecore/runbooks/webhooks.md`
+- `docs/forgecore/runbooks/jobs.md`
+- `docs/forgecore/runbooks/payments.md`
+- `docs/forgecore/runbooks/audit.md`
+- `docs/forgecore/runbooks/storage.md`
+- `docs/forgecore/runbooks/recovery.md`
 
-- `docs/forgecore/frontend-api-readiness.md`
-- `docs/forgecore/openapi/forgecore-gateway.v1.yaml`
+## Release
 
-Gateway E2E coverage verifies CORS preflight, security headers, health/readiness and public auth proxying:
+Le release seguono:
 
-```powershell
-make test-e2e
-```
+- changelog in `CHANGELOG.md`
+- strategia in `docs/forgecore/release.md`
+- ADR in `docs/forgecore/adr/`
+- compatibility matrix aggiornata per breaking changes
 
-## Releases
+## Contribuire
 
-Release policy:
-
-- changelog: `CHANGELOG.md`
-- release strategy: `docs/forgecore/release.md`
-- architecture decisions: `docs/forgecore/adr/`
-
-Breaking changes must update the compatibility matrix and changelog.
-
-## Contributing
-
-Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR.
+Leggi [CONTRIBUTING.md](./CONTRIBUTING.md) prima di aprire una PR.

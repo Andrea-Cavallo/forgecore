@@ -63,6 +63,30 @@ docs/forgecore/openapi/forgecore-gateway.v1.yaml
 
 This contract is the source for future TypeScript client generation.
 
+## Postman
+
+The frontend-facing Postman collection lives in:
+
+```text
+docs/forgecore/postman/ForgeCore.postman_collection.json
+```
+
+Optional local environment:
+
+```text
+docs/forgecore/postman/ForgeCore.local.postman_environment.json
+```
+
+It covers health, auth, protected route examples, payments, subscriptions, config, permissions, webhooks, storage, admin and negative security checks.
+
+## Test Plan
+
+The full frontend verification checklist lives in:
+
+```text
+docs/forgecore/frontend-testplan.md
+```
+
 ## E2E
 
 Run the gateway frontend E2E smoke test:
